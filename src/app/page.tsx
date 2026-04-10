@@ -60,7 +60,7 @@ export default async function HomePage() {
 
       {/* ── Good-Cause Banner ──────────────────────── */}
       <div className="bg-green-700 text-white text-center py-2.5 px-4 text-sm font-medium tracking-wide">
-        💚 GiveSaver is <strong>100% free</strong> and non-commercial. We make no money here.
+        💚 DontWaste is <strong>100% free</strong> and non-commercial. We make no money here.
         This platform exists purely for a good cause — please use it responsibly and don&apos;t misuse it.
       </div>
 
@@ -117,7 +117,7 @@ export default async function HomePage() {
       <section className="bg-white py-16">
         <div className="section-wrapper">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800">How GiveSaver Works</h2>
+            <h2 className="text-3xl font-bold text-gray-800">How DontWaste Works</h2>
             <p className="text-gray-500 mt-2 max-w-xl mx-auto">
               No sign-up. No approval process. Post in 2 minutes and let receivers claim directly.
             </p>
@@ -227,7 +227,7 @@ export default async function HomePage() {
           <p className="text-2xl mb-3">🙏</p>
           <h2 className="text-xl font-bold mb-2">Built for Good. Keep it that way.</h2>
           <p className="text-green-200 text-sm leading-relaxed">
-            GiveSaver is a <strong>free, non-profit platform</strong> run by volunteers.
+            DontWaste is a <strong>free, non-profit platform</strong> run by volunteers.
             We earn nothing from this. No ads. No fees. No subscriptions.
             Every listing is a real act of generosity — please don&apos;t misuse it.
             Fake listings, spam, or exploitation of donors or receivers will be removed immediately.
@@ -243,7 +243,7 @@ export default async function HomePage() {
         <div className="section-wrapper flex gap-3 items-start">
           <span className="text-xl shrink-0 mt-0.5">⚠️</span>
           <p className="text-sm text-amber-800 leading-relaxed">
-            <strong>Disclaimer:</strong> GiveSaver is a coordination platform only. We do not verify item quality,
+            <strong>Disclaimer:</strong> DontWaste is a coordination platform only. We do not verify item quality,
             handle transport, or guarantee the condition of donated goods.
             Donors and recipients are solely responsible for item safety.{' '}
             <Link href="/disclaimer" className="underline font-semibold">Read full disclaimer →</Link>
