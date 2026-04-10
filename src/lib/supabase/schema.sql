@@ -1,5 +1,5 @@
 -- GiveSaver Production Schema
--- Run this in your Supabase SQL editor: https://supabase.com/dashboard/project/_/sql/new
+-- Run this in your Supabase SQL editor
 
 -- ─── EXTENSIONS ────────────────────────────────────────────────
 create extension if not exists "uuid-ossp";
@@ -19,11 +19,11 @@ create table if not exists public.donations (
   donor_name  text not null,
   donor_type  text not null check (donor_type in ('Individual','Business','NGO','Institution')),
   phone       text not null,
+  photo_url   text,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
 
--- Auto-update updated_at on every row change
 create or replace function public.set_updated_at()
 returns trigger language plpgsql as $$
 begin new.updated_at = now(); return new; end;
@@ -58,22 +58,31 @@ create table if not exists public.ngo_registrations (
 alter table public.donations         enable row level security;
 alter table public.ngo_registrations enable row level security;
 
--- Donations: anyone can read
 create policy "Public read donations"
-  on public.donations for select
-  using (true);
+  on public.donations for select using (true);
 
--- Donations: anyone (anon) can insert
 create policy "Anyone can post donation"
-  on public.donations for insert
-  with check (true);
+  on public.donations for insert with check (true);
 
--- NGO registrations: anyone can submit
+create policy "Anyone can update donation status"
+  on public.donations for update using (true);
+
 create policy "Anyone can register NGO"
-  on public.ngo_registrations for insert
-  with check (true);
+  on public.ngo_registrations for insert with check (true);
 
--- NGO registrations: only service role (admin) can read
 create policy "Service role reads NGO registrations"
   on public.ngo_registrations for select
   using (auth.role() = 'service_role');
+
+-- ─── STORAGE BUCKET ──────────────────────────────────────────
+insert into storage.buckets (id, name, public)
+values ('donation-photos', 'donation-photos', true)
+on conflict (id) do nothing;
+
+create policy "Anyone can upload donation photos"
+  on storage.objects for insert
+  with check (bucket_id = 'donation-photos');
+
+create policy "Public read donation photos"
+  on storage.objects for select
+  using (bucket_id = 'donation-photos');

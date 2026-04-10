@@ -18,6 +18,7 @@ export type Database = {
           donor_name:  string;
           donor_type:  'Individual' | 'Business' | 'NGO' | 'Institution';
           phone:       string;
+          photo_url:   string | null;
           created_at:  string;
           updated_at:  string;
         };
@@ -51,5 +52,5 @@ export type Database = {
   };
 };
 
-export type DonationRow       = Database['public']['Tables']['donations']['Row'];
+export type DonationRow        = Database['public']['Tables']['donations']['Row'];
 export type NGORegistrationRow = Database['public']['Tables']['ngo_registrations']['Row'];

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { ITEM_TYPES } from '@/lib/data';
 import type { Category } from '@/lib/data';
@@ -11,13 +11,29 @@ const CATEGORIES: { value: Category; label: string; emoji: string; hint: string 
 ];
 
 export default function DonatePage() {
-  const [category, setCategory] = useState<Category>('FOOD');
-  const [agreed,   setAgreed]   = useState(false);
-  const [loading,  setLoading]  = useState(false);
+  const [category,  setCategory]  = useState<Category>('FOOD');
+  const [agreed,    setAgreed]    = useState(false);
+  const [loading,   setLoading]   = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [error,    setError]    = useState('');
+  const [error,     setError]     = useState('');
+  const [donationId, setDonationId] = useState('');
+  const [preview,   setPreview]   = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const cat = CATEGORIES.find((c) => c.value === category)!;
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Photo must be under 5 MB.');
+      return;
+    }
+    setPhotoFile(file);
+    setPreview(URL.createObjectURL(file));
+    setError('');
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -27,6 +43,7 @@ export default function DonatePage() {
     const fd   = new FormData(form);
 
     try {
+      // 1️⃣ Post donation metadata first
       const res = await fetch('/api/donations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,6 +62,20 @@ export default function DonatePage() {
         }),
       });
       if (!res.ok) throw new Error(await res.text());
+      const donation = await res.json();
+
+      // 2️⃣ Upload photo if provided
+      if (photoFile && donation.id) {
+        const photoForm = new FormData();
+        photoForm.append('file', photoFile);
+        photoForm.append('donationId', donation.id);
+        await fetch('/api/donations/upload-photo', {
+          method: 'POST',
+          body: photoForm,
+        });
+      }
+
+      setDonationId(donation.id);
       setSubmitted(true);
     } catch (err) {
       setError('Something went wrong. Please try again.');
@@ -59,12 +90,16 @@ export default function DonatePage() {
       <div className="text-center max-w-md">
         <div className="text-7xl mb-6">🎉</div>
         <h2 className="text-3xl font-bold text-gray-800 mb-3">Donation Posted!</h2>
-        <p className="text-gray-500 leading-relaxed mb-8">
-          Thank you for your generosity. Your listing is now live and
-          NGOs in Chennai will be notified.
+        <p className="text-gray-500 leading-relaxed mb-3">
+          Thank you for your generosity. Your listing is now live and NGOs in Chennai will see it.
         </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm text-blue-800 text-left">
+          <p className="font-semibold mb-1">🔗 Save your manage link</p>
+          <p className="text-xs text-blue-600 break-all">/manage/{donationId}</p>
+          <p className="text-xs text-blue-500 mt-1">Use this link to mark your donation as Claimed or Collected once someone picks it up.</p>
+        </div>
         <div className="flex gap-3 justify-center flex-wrap">
-          <button onClick={() => { setSubmitted(false); setAgreed(false); }} className="btn-secondary">Post Another</button>
+          <Link href={`/manage/${donationId}`} className="btn-secondary">📝 Manage Listing</Link>
           <Link href="/browse" className="btn-primary">Browse Donations</Link>
         </div>
       </div>
@@ -81,7 +116,6 @@ export default function DonatePage() {
       </div>
       <div className="section-wrapper py-10">
         <div className="max-w-2xl mx-auto">
-          {/* Category */}
           <div className="mb-8">
             <p className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">Select Category</p>
             <div className="grid grid-cols-3 gap-3">
@@ -97,20 +131,52 @@ export default function DonatePage() {
           </div>
 
           <div className="card">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 mb-5">
-                {error}
-              </div>
-            )}
+            {error && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 mb-5">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-5">
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Donation Title *</label>
                 <input name="title" required placeholder={cat.hint} className="input-field" />
               </div>
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
                 <textarea name="description" rows={3} placeholder="Describe the items..." className="input-field resize-none" />
               </div>
+
+              {/* Photo Upload */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Photo <span className="text-gray-400 font-normal">(optional, max 5 MB)</span>
+                </label>
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  className={`relative cursor-pointer rounded-xl border-2 border-dashed transition-all ${
+                    preview ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50 hover:border-green-400 hover:bg-green-50'
+                  } flex flex-col items-center justify-center overflow-hidden`}
+                  style={{ minHeight: preview ? 0 : '120px' }}
+                >
+                  {preview ? (
+                    <div className="relative w-full">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={preview} alt="Preview" className="w-full max-h-56 object-cover rounded-xl" />
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setPreview(null); setPhotoFile(null); if (fileRef.current) fileRef.current.value = ''; }}
+                        className="absolute top-2 right-2 bg-white/90 hover:bg-white text-gray-700 rounded-full w-7 h-7 flex items-center justify-center shadow text-sm"
+                      >✕</button>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center px-4">
+                      <div className="text-3xl mb-2">📸</div>
+                      <p className="text-sm font-medium text-gray-600">Click to upload a photo</p>
+                      <p className="text-xs text-gray-400 mt-1">JPG, PNG, WEBP · Max 5 MB</p>
+                    </div>
+                  )}
+                </div>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Quantity *</label>
@@ -124,6 +190,7 @@ export default function DonatePage() {
                   </select>
                 </div>
               </div>
+
               {category === 'FOOD' && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Expiry / Best Before *</label>
@@ -131,6 +198,7 @@ export default function DonatePage() {
                   <p className="text-xs text-gray-400 mt-1">Required for food safety.</p>
                 </div>
               )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Your Name *</label>
@@ -146,6 +214,7 @@ export default function DonatePage() {
                   </select>
                 </div>
               </div>
+
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">WhatsApp / Contact *</label>
                 <input name="phone" required placeholder="+91 XXXXX XXXXX" className="input-field" />
@@ -158,16 +227,18 @@ export default function DonatePage() {
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">City *</label>
                 <input name="city" required defaultValue="Chennai" placeholder="City" className="input-field" />
               </div>
+
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 accent-green-600 shrink-0" />
                   <span className="text-sm text-amber-800 leading-relaxed">
-                    I confirm the donated items are <strong>safe, clean, and fit for use</strong>. I have read and agree to the{' '}
-                    <Link href="/terms" target="_blank" className="underline font-semibold">Terms &amp; Conditions</Link>{' '}and{' '}
+                    I confirm the donated items are <strong>safe, clean, and fit for use</strong>. I agree to the{' '}
+                    <Link href="/terms" target="_blank" className="underline font-semibold">Terms</Link> and{' '}
                     <Link href="/disclaimer" target="_blank" className="underline font-semibold">Disclaimer</Link>.
                   </span>
                 </label>
               </div>
+
               <button type="submit" disabled={!agreed || loading}
                 className="btn-primary w-full py-3.5 text-base disabled:opacity-40 disabled:cursor-not-allowed">
                 {loading ? 'Posting...' : `${cat.emoji} Post ${cat.label} Donation`}
