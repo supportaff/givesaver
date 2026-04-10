@@ -1,7 +1,28 @@
 import Link from 'next/link';
-import { STATS } from '@/lib/data';
+import { createAdminClient } from '@/lib/supabase/server';
 
-export default function AboutPage() {
+export const revalidate = 60;
+
+async function getLiveStats() {
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase.from('donations').select('status, category');
+    const rows = (data ?? []) as { status: string; category: string }[];
+    return {
+      total:     rows.length,
+      collected: rows.filter((r) => r.status === 'COLLECTED').length,
+      food:      rows.filter((r) => r.category === 'FOOD').length,
+      clothes:   rows.filter((r) => r.category === 'CLOTHES').length,
+      books:     rows.filter((r) => r.category === 'BOOKS').length,
+    };
+  } catch {
+    return { total: 0, collected: 0, food: 0, clothes: 0, books: 0 };
+  }
+}
+
+export default async function AboutPage() {
+  const stats = await getLiveStats();
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-gradient-to-br from-green-700 to-emerald-600 text-white">
@@ -24,15 +45,15 @@ export default function AboutPage() {
           </p>
         </div>
 
-        {/* Stats */}
+        {/* Live Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
           {[
-            { emoji: '🎁', label: 'Total Donations',  value: STATS.totalDonations },
-            { emoji: '🤝', label: 'NGO Partners',     value: STATS.ngoPartners },
-            { emoji: '🏩', label: 'Cities Covered',   value: STATS.citiesCovered },
-            { emoji: '❤️',   label: 'Lives Impacted',  value: `${STATS.livesImpacted}+` },
-            { emoji: '🍱', label: 'Food Saved',       value: STATS.foodSaved },
-            { emoji: '📚', label: 'Books Shared',     value: '680+' },
+            { emoji: '📦', label: 'Total Donations',   value: stats.total },
+            { emoji: '✅', label: 'Successfully Collected', value: stats.collected },
+            { emoji: '🍱', label: 'Food Donations',    value: stats.food },
+            { emoji: '👕', label: 'Clothes Donations', value: stats.clothes },
+            { emoji: '📚', label: 'Book Donations',    value: stats.books },
+            { emoji: '🌱', label: 'Items Saved from Waste', value: stats.collected },
           ].map((s) => (
             <div key={s.label} className="card text-center">
               <div className="text-3xl mb-2">{s.emoji}</div>
@@ -49,7 +70,7 @@ export default function AboutPage() {
             {[
               { emoji: '🍱', title: 'Food',    desc: 'Cooked meals, vegetables, fruits, packaged goods, grains — anything safe and edible. Food donations include expiry tracking.' },
               { emoji: '👕', title: 'Clothes', desc: 'Clean, wearable clothing for all ages — everyday wear, winter clothing, footwear, and accessories.' },
-              { emoji: '📚', title: 'Books',   desc: 'School textbooks, story books, reference materials, children\'s activity books, religious texts, and more.' },
+              { emoji: '📚', title: 'Books',   desc: "School textbooks, story books, reference materials, children's activity books, religious texts, and more." },
             ].map((c) => (
               <div key={c.title} className="card text-center">
                 <div className="text-5xl mb-4">{c.emoji}</div>
