@@ -37,15 +37,14 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Promise */}
+          {/* Legal links */}
           <div>
-            <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Our Promise</h4>
+            <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Legal &amp; Safety</h4>
             <ul className="space-y-2 text-sm">
-              <li className="flex gap-2">✅ 100% Free, always</li>
-              <li className="flex gap-2">✅ No ads, no tracking</li>
-              <li className="flex gap-2">✅ No profit, no fees</li>
-              <li className="flex gap-2">✅ Built for Tamil Nadu</li>
-              <li className="flex gap-2">🙏 Use it for good only</li>
+              <li><Link href="/terms"      className="hover:text-white transition-colors">Terms &amp; Conditions</Link></li>
+              <li><Link href="/privacy"    className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/safety"     className="hover:text-white transition-colors">Safety Guidelines</Link></li>
+              <li><Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link></li>
             </ul>
           </div>
         </div>

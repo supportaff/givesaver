@@ -8,7 +8,7 @@ export default function DisclaimerPage() {
           <div className="text-5xl mb-4">⚠️</div>
           <h1 className="text-4xl font-bold mb-3">Disclaimer</h1>
           <p className="text-amber-100 max-w-xl mx-auto">
-            Please read this carefully before using GiveSaver.
+            Please read this carefully before using DontWaste.
           </p>
         </div>
       </div>
@@ -17,16 +17,16 @@ export default function DisclaimerPage() {
         <div className="space-y-8">
 
           <div className="card">
-            <h2 className="text-xl font-bold text-gray-800 mb-3">📋 What GiveSaver Is</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">📋 What DontWaste Is</h2>
             <p className="text-gray-600 leading-relaxed">
-              GiveSaver is a <strong>free, non-commercial coordination platform</strong> that connects
+              DontWaste is a <strong>free, non-commercial coordination platform</strong> that connects
               people who have surplus food, clothes, or books with people who need them. We do not
               charge any fee, run any advertising, or profit from any transaction on this platform.
             </p>
           </div>
 
           <div className="card border-l-4 border-red-400">
-            <h2 className="text-xl font-bold text-gray-800 mb-3">🚫 What GiveSaver Does NOT Do</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-3">🚫 What DontWaste Does NOT Do</h2>
             <ul className="space-y-2 text-gray-600 text-sm">
               {[
                 'Verify, inspect, or guarantee the quality, safety, or condition of any donated item.',
@@ -70,7 +70,7 @@ export default function DisclaimerPage() {
                 'Meet donors in safe, public locations — never share your home address.',
                 'Do not claim donations you do not genuinely need.',
                 'Contact the donor directly and be respectful of their time.',
-                'GiveSaver is not liable for any harm arising from items received.',
+                'DontWaste is not liable for any harm arising from items received.',
               ].map((item) => (
                 <li key={item} className="flex gap-2">
                   <span className="text-blue-500 shrink-0">✓</span>
@@ -89,7 +89,7 @@ export default function DisclaimerPage() {
                 { icon: '👁️',  tip: 'Inspect items on the spot before taking them.' },
                 { icon: '⏰', tip: 'Arrange pickup at a reasonable time — daytime is safest.' },
                 { icon: '🧴', tip: 'For food: check packaging, smell, and expiry date.' },
-                { icon: '🚨', tip: 'Report misuse to us at support@givesaver.in.' },
+                { icon: '🚨', tip: 'Report misuse to us at support@dontwaste.in.' },
               ].map((s) => (
                 <div key={s.tip} className="flex gap-2 text-sm text-gray-700">
                   <span className="shrink-0">{s.icon}</span>
@@ -102,7 +102,7 @@ export default function DisclaimerPage() {
           <div className="card">
             <h2 className="text-xl font-bold text-gray-800 mb-3">⚖️ Limitation of Liability</h2>
             <p className="text-gray-600 text-sm leading-relaxed">
-              GiveSaver, its creators, volunteers, and contributors are <strong>not liable</strong> for
+              DontWaste, its creators, volunteers, and contributors are <strong>not liable</strong> for
               any loss, injury, illness, or damage arising from the use of this platform, including
               but not limited to items received through donations, interactions between users, or
               failure of any party to fulfill their commitments. Use of this platform constitutes
@@ -113,11 +113,17 @@ export default function DisclaimerPage() {
           <div className="card">
             <h2 className="text-xl font-bold text-gray-800 mb-3">📧 Contact Us</h2>
             <p className="text-gray-600 text-sm">
-              For concerns, misuse reports, or questions: <strong>support@givesaver.in</strong>
+              For concerns, misuse reports, or questions: <strong>support@dontwaste.in</strong>
             </p>
           </div>
 
-          <div className="text-center pt-4">
+          <div className="text-xs text-gray-400 text-center pt-2 space-x-4">
+            <Link href="/terms" className="hover:text-gray-700 underline">Terms &amp; Conditions</Link>
+            <Link href="/privacy" className="hover:text-gray-700 underline">Privacy Policy</Link>
+            <Link href="/safety" className="hover:text-gray-700 underline">Safety Guidelines</Link>
+          </div>
+
+          <div className="text-center pt-2">
             <Link href="/" className="btn-secondary mr-3">Back to Home</Link>
             <Link href="/donate" className="btn-primary">Post a Donation</Link>
           </div>
