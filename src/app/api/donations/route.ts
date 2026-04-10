@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import type { Database } from '@/lib/supabase/types';
-
-type DonationInsert = Database['public']['Tables']['donations']['Insert'];
 
 export async function GET() {
   try {
@@ -25,24 +22,23 @@ export async function POST(req: Request) {
     const body = await req.json();
     const supabase = createAdminClient();
 
-    const payload: DonationInsert = {
-      title:       body.title,
-      description: body.description || null,
-      quantity:    body.quantity,
-      category:    body.category,
-      item_type:   body.itemType,
-      expires_at:  body.expiresAt || null,
-      address:     body.address,
-      city:        body.city || 'Chennai',
-      donor_name:  body.donorName,
-      donor_type:  body.donorType || 'Individual',
-      phone:       body.phone,
-      status:      'AVAILABLE',
-    };
-
     const { data, error } = await supabase
       .from('donations')
-      .insert([payload])
+      .insert([{
+        title:       body.title,
+        description: body.description || null,
+        quantity:    body.quantity,
+        category:    body.category,
+        item_type:   body.itemType,
+        expires_at:  body.expiresAt || null,
+        address:     body.address,
+        city:        body.city || 'Chennai',
+        donor_name:  body.donorName,
+        donor_type:  body.donorType || 'Individual',
+        phone:       body.phone,
+        status:      'AVAILABLE',
+        photo_url:   null,
+      }])
       .select()
       .single();
 

@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
-import type { Database } from '@/lib/supabase/types';
 
-type DonationUpdate = Database['public']['Tables']['donations']['Update'];
+const VALID_STATUSES = ['AVAILABLE', 'CLAIMED', 'COLLECTED'] as const;
+type Status = typeof VALID_STATUSES[number];
 
 export async function PATCH(
   req: Request,
@@ -10,22 +10,17 @@ export async function PATCH(
 ) {
   try {
     const { id }     = await params;
-    const body       = await req.json() as { status: string };
-    const { status } = body;
+    const body       = await req.json();
+    const status     = body.status as string;
 
-    if (!['AVAILABLE', 'CLAIMED', 'COLLECTED'].includes(status)) {
+    if (!VALID_STATUSES.includes(status as Status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
     const supabase = createAdminClient();
-
-    const payload: DonationUpdate = {
-      status: status as 'AVAILABLE' | 'CLAIMED' | 'COLLECTED',
-    };
-
     const { data, error } = await supabase
       .from('donations')
-      .update(payload)
+      .update({ status })
       .eq('id', id)
       .select()
       .single();

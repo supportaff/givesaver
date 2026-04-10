@@ -1,13 +1,13 @@
 import { createServerClient, type CookieMethodsServer } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from './types';
 
 type CookiesToSet = Parameters<CookieMethodsServer['setAll']>[0];
 
+// Browser-safe server client (anon key, cookie-aware)
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
-  return createServerClient<Database>(
+  return createServerClient(
     process.env.NEXT_PUBLIC_GS_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_GS_SUPABASE_ANON_KEY!,
     {
@@ -25,9 +25,9 @@ export async function createServerSupabaseClient() {
   );
 }
 
-// Service-role client for server-side admin operations
+// Service-role admin client (no generic — avoids 'never' overload errors from hand-rolled types)
 export function createAdminClient() {
-  return createClient<Database>(
+  return createClient(
     process.env.NEXT_PUBLIC_GS_SUPABASE_URL!,
     process.env.GS_SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }
