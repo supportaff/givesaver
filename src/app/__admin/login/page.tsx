@@ -44,13 +44,11 @@ export default function AdminLoginPage() {
           <h1 className="text-xl font-bold text-gray-800">Admin Login</h1>
           <p className="text-xs text-gray-400 mt-1">GiveSaver — restricted area</p>
         </div>
-
         {locked && (
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-xs text-red-700 text-center font-medium">
             🔒 Too many failed attempts. Please refresh.
           </div>
         )}
-
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           {error && !locked && (
             <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center">
