@@ -1,8 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
-// ---- Types ----
 interface Donation {
   id: string; title: string; category: string; status: string;
   flagged: boolean; flagged_reason: string | null; collected_at: string | null;
@@ -25,11 +24,18 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 function fmt(iso: string) {
-  return new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleDateString('en-IN', {
+    day: '2-digit', month: 'short', year: '2-digit',
+    hour: '2-digit', minute: '2-digit',
+  });
 }
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const params = useParams();
+  const slug   = params?.adminSecret as string ?? '';
+
+  const [ready,       setReady]       = useState(false);
   const [tab,         setTab]         = useState<'donations' | 'claims'>('donations');
   const [stats,       setStats]       = useState<Stats | null>(null);
   const [donations,   setDonations]   = useState<Donation[]>([]);
@@ -42,50 +48,64 @@ export default function AdminDashboard() {
   const [loading,     setLoading]     = useState(true);
   const [actionId,    setActionId]    = useState<string | null>(null);
 
-  // Load stats
+  // ── Auth gate: verify slug + session cookie via stats API ──────────────────
   useEffect(() => {
-    fetch('/api/admin/stats').then((r) => r.json()).then(setStats).catch(() => {});
-  }, []);
+    // Immediately bounce if the slug looks wrong (e.g. someone hits /login
+    // directly which maps here because [adminSecret] catches everything)
+    const knownPublicPaths = ['login', 'favicon.ico', '_next'];
+    if (!slug || knownPublicPaths.includes(slug)) {
+      router.replace('/');
+      return;
+    }
+    // Probe the stats API — middleware will 401 if cookie is absent/wrong
+    fetch('/api/admin/stats').then((r) => {
+      if (r.status === 401) {
+        router.replace(`/${slug}/login`);
+      } else {
+        r.json().then(setStats);
+        setReady(true);
+      }
+    }).catch(() => router.replace(`/${slug}/login`));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
 
-  // Load donations
   const loadDonations = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({ page: String(page) });
-    if (filter)   params.set('status',  filter);
-    if (flagOnly) params.set('flagged', '1');
-    if (search)   params.set('search',  search);
-    const res  = await fetch(`/api/admin/donations?${params}`);
+    const p = new URLSearchParams({ page: String(page) });
+    if (filter)   p.set('status',  filter);
+    if (flagOnly) p.set('flagged', '1');
+    if (search)   p.set('search',  search);
+    const res  = await fetch(`/api/admin/donations?${p}`);
+    if (res.status === 401) { router.replace(`/${slug}/login`); return; }
     const data = await res.json();
-    if (res.status === 401) { router.push('login'); return; }
     setDonations(data.data ?? []);
     setTotal(data.total ?? 0);
     setLoading(false);
-  }, [page, filter, flagOnly, search, router]);
+  }, [page, filter, flagOnly, search, router, slug]);
 
-  // Load claims
   const loadClaims = useCallback(async () => {
     setLoading(true);
     const res  = await fetch(`/api/admin/claims?page=${page}`);
+    if (res.status === 401) { router.replace(`/${slug}/login`); return; }
     const data = await res.json();
     setClaims(data.data ?? []);
     setTotal(data.total ?? 0);
     setLoading(false);
-  }, [page]);
+  }, [page, router, slug]);
 
   useEffect(() => {
+    if (!ready) return;
     if (tab === 'donations') loadDonations();
     else loadClaims();
-  }, [tab, loadDonations, loadClaims]);
+  }, [ready, tab, loadDonations, loadClaims]);
 
   async function patchDonation(id: string, patch: Record<string, unknown>) {
     setActionId(id);
     await fetch(`/api/admin/donations/${id}`, {
-      method:  'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(patch),
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(patch),
     });
     await loadDonations();
-    // Refresh stats too
     fetch('/api/admin/stats').then((r) => r.json()).then(setStats);
     setActionId(null);
   }
@@ -101,7 +121,16 @@ export default function AdminDashboard() {
 
   async function handleLogout() {
     await fetch('/api/admin/login', { method: 'DELETE' });
-    router.push('login');
+    router.replace(`/${slug}/login`);
+  }
+
+  // Show nothing while auth probe is in flight
+  if (!ready) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-sm text-gray-400 animate-pulse">Verifying access…</p>
+      </div>
+    );
   }
 
   const pages = Math.ceil(total / 20);
@@ -118,24 +147,25 @@ export default function AdminDashboard() {
             <p className="text-xs text-gray-400">Control Panel</p>
           </div>
         </div>
-        <button onClick={handleLogout} className="text-xs text-gray-400 hover:text-red-500 transition-colors px-3 py-1.5 rounded-lg border border-gray-200 hover:border-red-200">
+        <button onClick={handleLogout}
+          className="text-xs text-gray-400 hover:text-red-500 transition-colors px-3 py-1.5 rounded-lg border border-gray-200 hover:border-red-200">
           Logout
         </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        {/* Stats row */}
+        {/* Stats */}
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
-              { label: 'Total',     value: stats.totalDonations, color: 'bg-white' },
-              { label: 'Available', value: stats.available,      color: 'bg-green-50' },
-              { label: 'Claimed',   value: stats.claimed,        color: 'bg-blue-50' },
-              { label: 'Collected', value: stats.collected,      color: 'bg-gray-100' },
+              { label: 'Total',      value: stats.totalDonations, color: 'bg-white' },
+              { label: 'Available',  value: stats.available,      color: 'bg-green-50' },
+              { label: 'Claimed',    value: stats.claimed,        color: 'bg-blue-50' },
+              { label: 'Collected',  value: stats.collected,      color: 'bg-gray-100' },
               { label: '🚩 Flagged', value: stats.flagged,       color: 'bg-red-50' },
-              { label: 'Claims',    value: stats.totalClaims,    color: 'bg-purple-50' },
-              { label: 'NGOs',      value: stats.totalNGOs,      color: 'bg-amber-50' },
+              { label: 'Claims',     value: stats.totalClaims,    color: 'bg-purple-50' },
+              { label: 'NGOs',       value: stats.totalNGOs,      color: 'bg-amber-50' },
             ].map((s) => (
               <div key={s.label} className={`${s.color} rounded-xl border border-gray-100 p-4 text-center shadow-sm`}>
                 <p className="text-2xl font-bold text-gray-800">{s.value}</p>
@@ -155,15 +185,12 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Donations filters */}
+        {/* Filters */}
         {tab === 'donations' && (
           <div className="flex flex-wrap gap-2 items-center">
-            <input
-              placeholder="🔍 Search title…"
-              value={search}
+            <input placeholder="🔍 Search title…" value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              className="input-field text-sm w-48"
-            />
+              className="input-field text-sm w-48" />
             {['', 'AVAILABLE', 'CLAIMED', 'COLLECTED'].map((s) => (
               <button key={s} onClick={() => { setFilter(s); setPage(1); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
@@ -171,7 +198,8 @@ export default function AdminDashboard() {
                 }`}>{s || 'All'}</button>
             ))}
             <label className="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer ml-1">
-              <input type="checkbox" checked={flagOnly} onChange={(e) => { setFlagOnly(e.target.checked); setPage(1); }}
+              <input type="checkbox" checked={flagOnly}
+                onChange={(e) => { setFlagOnly(e.target.checked); setPage(1); }}
                 className="accent-red-500" />
               Flagged only
             </label>
@@ -181,7 +209,7 @@ export default function AdminDashboard() {
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-gray-400 text-sm">Loading…</div>
+            <div className="flex items-center justify-center py-16 text-gray-400 text-sm animate-pulse">Loading…</div>
           ) : tab === 'donations' ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -200,13 +228,11 @@ export default function AdminDashboard() {
                     <tr><td colSpan={6} className="text-center py-10 text-gray-400">No donations found</td></tr>
                   )}
                   {donations.map((d) => (
-                    <tr key={d.id} className={`hover:bg-gray-50 transition-colors ${ d.flagged ? 'bg-red-50' : ''}`}>
+                    <tr key={d.id} className={`hover:bg-gray-50 transition-colors ${d.flagged ? 'bg-red-50' : ''}`}>
                       <td className="px-4 py-3">
                         <div className="font-medium text-gray-800 max-w-[180px] truncate">{d.title}</div>
                         <div className="text-xs text-gray-400">{d.quantity} · {d.category}</div>
-                        {d.flagged && (
-                          <div className="text-xs text-red-600 mt-0.5">🚩 {d.flagged_reason ?? 'Flagged'}</div>
-                        )}
+                        {d.flagged && <div className="text-xs text-red-600 mt-0.5">🚩 {d.flagged_reason ?? 'Flagged'}</div>}
                       </td>
                       <td className="px-4 py-3">
                         <div className="font-medium text-gray-700">{d.donor_name}</div>
@@ -220,33 +246,29 @@ export default function AdminDashboard() {
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1">
                           {d.status !== 'COLLECTED' && (
-                            <button
-                              disabled={actionId === d.id}
+                            <button disabled={actionId === d.id}
                               onClick={() => patchDonation(d.id, { status: 'COLLECTED', collected_at: new Date().toISOString() })}
                               className="px-2 py-1 rounded-lg text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 disabled:opacity-40">
                               ✅ Collected
                             </button>
                           )}
                           {!d.flagged ? (
-                            <button
-                              disabled={actionId === d.id}
+                            <button disabled={actionId === d.id}
                               onClick={async () => {
-                                const reason = prompt('Flag reason (optional):') ?? 'Abuse reported';
+                                const reason = prompt('Flag reason:') ?? 'Abuse reported';
                                 await patchDonation(d.id, { flagged: true, flagged_reason: reason });
                               }}
                               className="px-2 py-1 rounded-lg text-xs bg-orange-50 hover:bg-orange-100 text-orange-600 disabled:opacity-40">
                               🚩 Flag
                             </button>
                           ) : (
-                            <button
-                              disabled={actionId === d.id}
+                            <button disabled={actionId === d.id}
                               onClick={() => patchDonation(d.id, { flagged: false, flagged_reason: null })}
                               className="px-2 py-1 rounded-lg text-xs bg-green-50 hover:bg-green-100 text-green-600 disabled:opacity-40">
                               ✅ Unflag
                             </button>
                           )}
-                          <button
-                            disabled={actionId === d.id}
+                          <button disabled={actionId === d.id}
                             onClick={() => deleteDonation(d.id)}
                             className="px-2 py-1 rounded-lg text-xs bg-red-50 hover:bg-red-100 text-red-600 disabled:opacity-40">
                             🗑️ Delete
@@ -279,11 +301,9 @@ export default function AdminDashboard() {
                     <tr key={c.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium text-gray-800">{c.receiver_name}</td>
                       <td className="px-4 py-3 text-gray-500 text-xs">{c.receiver_phone}</td>
-                      <td className="px-4 py-3 text-xs text-gray-400 font-mono">{c.donation_id.slice(0, 8)}…</td>
+                      <td className="px-4 py-3 text-xs text-gray-400 font-mono">{c.donation_id.slice(0,8)}…</td>
                       <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate">{c.message ?? '—'}</td>
-                      <td className="px-4 py-3">
-                        <span className="badge bg-blue-50 text-blue-700 text-xs">{c.status}</span>
-                      </td>
+                      <td className="px-4 py-3"><span className="badge bg-blue-50 text-blue-700 text-xs">{c.status}</span></td>
                       <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{fmt(c.created_at)}</td>
                     </tr>
                   ))}
@@ -292,7 +312,6 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Pagination */}
           {pages > 1 && (
             <div className="flex items-center justify-between px-6 py-4 border-t border-gray-50">
               <p className="text-xs text-gray-400">{total} total</p>
@@ -306,7 +325,6 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
