@@ -42,7 +42,7 @@ export default function AdminLoginPage() {
         <div className="text-center mb-7">
           <div className="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-3 text-3xl">🛡️</div>
           <h1 className="text-xl font-bold text-gray-800">Admin Login</h1>
-          <p className="text-xs text-gray-400 mt-1">GiveSaver — restricted area</p>
+          <p className="text-xs text-gray-400 mt-1">DontWaste — restricted area</p>
         </div>
         {locked && (
           <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4 text-xs text-red-700 text-center font-medium">

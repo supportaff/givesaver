@@ -18,9 +18,14 @@ export default function Navbar() {
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
       <div className="section-wrapper flex items-center justify-between h-14 md:h-16">
-        <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+
+        {/* Logo + tagline */}
+        <Link href="/" className="flex items-center gap-2 group" onClick={() => setOpen(false)}>
           <span className="text-2xl">🌱</span>
-          <span className="font-bold text-lg md:text-xl text-gray-800 tracking-tight">GiveSaver</span>
+          <div className="leading-none">
+            <span className="font-extrabold text-lg md:text-xl text-gray-900 tracking-tight block">DontWaste</span>
+            <span className="text-[10px] text-green-600 font-medium tracking-wide hidden sm:block">Don’t let good go to waste</span>
+          </div>
         </Link>
 
         {/* Desktop nav */}

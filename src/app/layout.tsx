@@ -4,9 +4,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'GiveSaver – Donate Food, Clothes & Books',
-  description: 'Connect donors with NGOs to reduce waste and help communities across India.',
-  keywords: 'food donation, clothes donation, book donation, NGO, volunteers, India',
+  title: 'DontWaste — Donate Food, Clothes & Books',
+  description: 'Don\'t let good go to waste. Connect with NGOs and people in need across India — donate food, clothes, books and more for free.',
+  keywords: 'food donation, clothes donation, book donation, NGO, volunteers, India, dontwaste',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

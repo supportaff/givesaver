@@ -8,10 +8,11 @@ export default function Footer() {
 
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <span className="text-2xl">🌱</span>
-              <span className="text-white font-bold text-lg">GiveSaver</span>
+              <span className="text-white font-extrabold text-lg">DontWaste</span>
             </div>
+            <p className="text-green-400 text-xs font-medium mb-3 tracking-wide">Don’t let good go to waste.</p>
             <p className="text-sm leading-relaxed">
               A free, non-commercial platform connecting surplus donors
               with people who need it most. No ads. No fees. Just good.
@@ -26,7 +27,7 @@ export default function Footer() {
                 { href: '/browse',     label: 'Browse Donations' },
                 { href: '/donate',     label: 'Post a Donation' },
                 { href: '/ngos',       label: 'NGO Directory' },
-                { href: '/about',      label: 'About GiveSaver' },
+                { href: '/about',      label: 'About DontWaste' },
                 { href: '/disclaimer', label: 'Disclaimer' },
               ].map((l) => (
                 <li key={l.href}>
@@ -36,7 +37,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Good cause note */}
+          {/* Promise */}
           <div>
             <h4 className="text-white font-semibold mb-3 text-sm uppercase tracking-wider">Our Promise</h4>
             <ul className="space-y-2 text-sm">
@@ -50,7 +51,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs">
-          <p>© {new Date().getFullYear()} GiveSaver — Made with ❤️ for Tamil Nadu</p>
+          <p>© {new Date().getFullYear()} DontWaste — Made with ❤️ for Tamil Nadu</p>
           <p className="text-gray-600">Not affiliated with any government body or commercial organisation.</p>
         </div>
       </div>
