@@ -3,38 +3,47 @@ import { createAdminClient } from '@/lib/supabase/server';
 
 export async function POST(req: Request) {
   try {
-    const formData   = await req.formData();
-    const file       = formData.get('file') as File;
-    const donationId = formData.get('donationId') as string;
+    const form       = await req.formData();
+    const file       = form.get('file') as File | null;
+    const donationId = form.get('donationId') as string | null;
 
     if (!file || !donationId) {
-      return NextResponse.json({ error: 'Missing file or donationId' }, { status: 400 });
+      return NextResponse.json({ error: 'file and donationId required' }, { status: 400 });
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File too large (max 5 MB)' }, { status: 400 });
     }
 
+    const ext    = file.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const path   = `donations/${donationId}.${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+
     const supabase = createAdminClient();
-    const ext      = file.name.split('.').pop() ?? 'jpg';
-    const path     = `donations/${donationId}.${ext}`;
-    const buffer   = Buffer.from(await file.arrayBuffer());
 
-    const { error: uploadError } = await supabase.storage
+    // Upsert — remove any old file for this donation first (ignore error)
+    await supabase.storage.from('donation-photos').remove([path]);
+
+    const { error: upErr } = await supabase.storage
       .from('donation-photos')
-      .upload(path, buffer, { contentType: file.type, upsert: true });
-    if (uploadError) throw uploadError;
+      .upload(path, buffer, {
+        contentType: file.type || 'image/jpeg',
+        upsert:      true,
+      });
+    if (upErr) throw upErr;
 
-    const { data: { publicUrl } } = supabase.storage
+    const { data: urlData } = supabase.storage
       .from('donation-photos')
       .getPublicUrl(path);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error: updateError } = await supabase
-      .from('donations')
-      .update({ photo_url: publicUrl } as any)
+    // Persist photo_url back to the donation row
+    await supabase.from('donations')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ photo_url: urlData.publicUrl } as any)
       .eq('id', donationId);
-    if (updateError) throw updateError;
 
-    return NextResponse.json({ photo_url: publicUrl });
+    return NextResponse.json({ url: urlData.publicUrl });
   } catch (err) {
-    console.error('Photo upload error:', err);
+    console.error('POST /api/donations/upload-photo:', err);
     return NextResponse.json({ error: 'Photo upload failed' }, { status: 500 });
   }
 }

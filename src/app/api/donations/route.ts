@@ -8,7 +8,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('donations').select('*').order('created_at', { ascending: false });
     if (error) throw error;
-    return NextResponse.json(data);
+    return NextResponse.json(data ?? []);
   } catch (err) {
     console.error('GET /api/donations:', err);
     return NextResponse.json({ error: 'Failed to fetch donations' }, { status: 500 });
@@ -18,51 +18,47 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const b = await req.json();
+    if (!b.title || !b.quantity || !b.category || !b.donorName || !b.phone || !b.address) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
     const supabase = createAdminClient();
-    const { data, error } = await supabase
-      .from('donations')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .insert([{
-        title:          b.title,
-        description:    b.description ?? null,
-        quantity:       b.quantity,
-        category:       b.category,
-        item_type:      b.itemType,
-        expires_at:     b.expiresAt ?? null,
-        address:        b.address,
-        city:           b.city ?? 'Chennai',
-        donor_name:     b.donorName,
-        donor_type:     b.donorType ?? 'Individual',
-        phone:          b.phone,
-        donor_telegram: b.donorTelegram ?? null,
-        status:         'AVAILABLE',
-        photo_url:      null,
-      } as any])
-      .select().single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await supabase.from('donations').insert([{
+      title:          b.title,
+      description:    b.description    ?? null,
+      quantity:       b.quantity,
+      category:       b.category,
+      item_type:      b.itemType,
+      expires_at:     b.expiresAt      ?? null,
+      address:        b.address,
+      city:           b.city           ?? 'Chennai',
+      donor_name:     b.donorName,
+      donor_type:     b.donorType      ?? 'Individual',
+      phone:          b.phone,
+      donor_telegram: b.donorTelegram  ? b.donorTelegram.replace(/^@/, '') : null,
+      status:         'AVAILABLE',
+      photo_url:      null,
+    } as any]).select().single();
     if (error) throw error;
 
-    // Send manage link to donor via Telegram if they provided username
+    // Send Telegram to donor if they provided username
     if (data && b.donorTelegram) {
       const shortId = (data.id as string).slice(0, 8).toUpperCase();
+      const tg = b.donorTelegram.replace(/^@/, '');
       const msg = [
         `🎉 <b>GiveSaver — Donation Posted!</b>`,
         ``,
-        `Your donation is now live:`,
         `📌 <b>${data.title}</b>`,
         `🔖 Posting ID: <code>${shortId}</code>`,
         ``,
         `🔗 <b>Your private manage link:</b>`,
         `https://givesaver.in/manage/${data.id}`,
         ``,
-        `Use this link to:`,
-        `• View receiver’s details when someone claims`,
-        `• Enter receiver’s OTP to confirm pickup`,
-        `• Manually update status if needed`,
+        `Use this link to verify the receiver’s OTP and confirm pickup.`,
         ``,
-        `📱 To see all your donations: https://givesaver.in/my-donations`,
-        `Enter your phone number <b>${b.phone}</b> to view all listings.`,
+        `📱 All your listings: https://givesaver.in/my-donations`,
       ].join('\n');
-      await sendTelegram(b.donorTelegram.replace(/^@/, ''), msg);
+      await sendTelegram(tg, msg);
     }
 
     return NextResponse.json(data, { status: 201 });
