@@ -11,32 +11,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing file or donationId' }, { status: 400 });
     }
 
-    const supabase  = createAdminClient();
-    const ext       = file.name.split('.').pop() ?? 'jpg';
-    const path      = `donations/${donationId}.${ext}`;
-    const buffer    = Buffer.from(await file.arrayBuffer());
+    const supabase = createAdminClient();
+    const ext      = file.name.split('.').pop() ?? 'jpg';
+    const path     = `donations/${donationId}.${ext}`;
+    const buffer   = Buffer.from(await file.arrayBuffer());
 
-    // Upload to Supabase Storage bucket: "donation-photos"
     const { error: uploadError } = await supabase.storage
       .from('donation-photos')
-      .upload(path, buffer, {
-        contentType: file.type,
-        upsert: true,
-      });
-
+      .upload(path, buffer, { contentType: file.type, upsert: true });
     if (uploadError) throw uploadError;
 
-    // Get public URL
     const { data: { publicUrl } } = supabase.storage
       .from('donation-photos')
       .getPublicUrl(path);
 
-    // Update the donation row with photo_url
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: updateError } = await supabase
       .from('donations')
-      .update({ photo_url: publicUrl })
+      .update({ photo_url: publicUrl } as any)
       .eq('id', donationId);
-
     if (updateError) throw updateError;
 
     return NextResponse.json({ photo_url: publicUrl });

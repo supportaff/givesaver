@@ -13,11 +13,10 @@ export async function GET(
       .select('*')
       .eq('id', id)
       .single();
-
     if (error) throw error;
     return NextResponse.json(data);
   } catch (err) {
-    console.error('GET /api/donations/[id] error:', err);
+    console.error('GET /api/donations/[id]:', err);
     return NextResponse.json({ error: 'Donation not found' }, { status: 404 });
   }
 }
