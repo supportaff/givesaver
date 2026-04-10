@@ -47,16 +47,23 @@ export default async function HomePage() {
   const [recent, stats] = await Promise.all([getRecentDonations(), getLiveStats()]);
 
   const liveStatCards = [
-    { label: 'Total Donations',  value: stats.total,     emoji: '📦' },
-    { label: 'Available Now',    value: stats.available,  emoji: '🟢' },
-    { label: 'Already Collected',value: stats.collected,  emoji: '✅' },
-    { label: 'Food Listings',    value: stats.food,       emoji: '🍱' },
-    { label: 'Clothes Listings', value: stats.clothes,    emoji: '👕' },
-    { label: 'Book Listings',    value: stats.books,      emoji: '📚' },
+    { label: 'Total Donations',   value: stats.total,     emoji: '📦' },
+    { label: 'Available Now',     value: stats.available, emoji: '🟢' },
+    { label: 'Already Collected', value: stats.collected, emoji: '✅' },
+    { label: 'Food Listings',     value: stats.food,      emoji: '🍱' },
+    { label: 'Clothes Listings',  value: stats.clothes,   emoji: '👕' },
+    { label: 'Book Listings',     value: stats.books,     emoji: '📚' },
   ];
 
   return (
     <div>
+
+      {/* ── Good-Cause Banner ──────────────────────── */}
+      <div className="bg-green-700 text-white text-center py-2.5 px-4 text-sm font-medium tracking-wide">
+        💚 GiveSaver is <strong>100% free</strong> and non-commercial. We make no money here.
+        This platform exists purely for a good cause — please use it responsibly and don&apos;t misuse it.
+      </div>
+
       {/* ── Hero ───────────────────────────────────── */}
       <section className="relative bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none select-none">
@@ -119,23 +126,23 @@ export default async function HomePage() {
             {[
               {
                 icon: '📝', step: '1',
-                title: 'You Post a Donation',
-                desc: 'Fill in what you\'re donating — food, clothes, or books — along with quantity, pickup address, and your phone. Done in under 2 minutes.',
+                title: 'Post Your Donation',
+                desc: 'Fill in what you\'re donating — food, clothes, or books — along with the quantity, pickup address, and your phone number. Takes under 2 minutes.',
               },
               {
                 icon: '🔍', step: '2',
-                title: 'Receiver Finds & Claims',
-                desc: 'Anyone can browse listings and claim your donation. They enter their name and Telegram handle to confirm the claim.',
+                title: 'Receiver Browses & Claims',
+                desc: 'Anyone can search listings and claim your item. They provide their name and phone number to register the claim.',
               },
               {
-                icon: '🔑', step: '3',
-                title: 'OTPs Sent to Both',
-                desc: 'Both you and the receiver get a unique 6-digit OTP on Telegram. These are exchanged only at the physical pickup — no OTP sharing before meeting.',
+                icon: '📞', step: '3',
+                title: 'Direct Contact',
+                desc: 'Once claimed, the donor\'s phone number is shown to the receiver. They call or WhatsApp each other to agree on a pickup time and place.',
               },
               {
                 icon: '✅', step: '4',
-                title: 'Verify & Mark Collected',
-                desc: 'Both sides enter each other\'s OTP to confirm the handoff. Once matched, the donation is marked Collected and both get a Telegram confirmation.',
+                title: 'Mark as Collected',
+                desc: 'After the handoff, the donor marks the donation as Collected. Simple, honest, and done — no app, no OTP, no fuss.',
               },
             ].map((s) => (
               <div key={s.step} className="relative">
@@ -149,9 +156,6 @@ export default async function HomePage() {
                 <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
               </div>
             ))}
-          </div>
-          <div className="text-center mt-10">
-            <Link href="/how-it-works" className="btn-outline">Read Full Guide →</Link>
           </div>
         </div>
       </section>
@@ -190,7 +194,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Recent Donations (Browse section) ─────── */}
+      {/* ── Recent Donations ───────────────────────── */}
       <section className="bg-gray-50 py-16">
         <div className="section-wrapper">
           <div className="flex justify-between items-end mb-8">
@@ -217,7 +221,24 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Disclaimer ─────────────────────────────── */}
+      {/* ── Misuse Warning ─────────────────────────── */}
+      <section className="bg-green-900 text-white py-8">
+        <div className="section-wrapper max-w-3xl text-center">
+          <p className="text-2xl mb-3">🙏</p>
+          <h2 className="text-xl font-bold mb-2">Built for Good. Keep it that way.</h2>
+          <p className="text-green-200 text-sm leading-relaxed">
+            GiveSaver is a <strong>free, non-profit platform</strong> run by volunteers.
+            We earn nothing from this. No ads. No fees. No subscriptions.
+            Every listing is a real act of generosity — please don&apos;t misuse it.
+            Fake listings, spam, or exploitation of donors or receivers will be removed immediately.
+          </p>
+          <div className="flex flex-wrap gap-4 justify-center mt-5">
+            <Link href="/disclaimer" className="text-sm underline text-green-300 hover:text-white">Read our Disclaimer →</Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Disclaimer Bar ─────────────────────────── */}
       <section className="bg-amber-50 border-y border-amber-200 py-5">
         <div className="section-wrapper flex gap-3 items-start">
           <span className="text-xl shrink-0 mt-0.5">⚠️</span>
@@ -229,6 +250,7 @@ export default async function HomePage() {
           </p>
         </div>
       </section>
+
     </div>
   );
 }
