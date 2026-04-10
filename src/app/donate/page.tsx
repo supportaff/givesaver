@@ -11,14 +11,15 @@ const CATEGORIES: { value: Category; label: string; emoji: string; hint: string 
 ];
 
 export default function DonatePage() {
-  const [category,   setCategory]   = useState<Category>('FOOD');
-  const [agreed,     setAgreed]     = useState(false);
-  const [loading,    setLoading]    = useState(false);
-  const [submitted,  setSubmitted]  = useState(false);
-  const [error,      setError]      = useState('');
+  const [category,  setCategory]  = useState<Category>('FOOD');
+  const [agreed,    setAgreed]    = useState(false);
+  const [loading,   setLoading]   = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [error,     setError]     = useState('');
+  const [donorPhone, setDonorPhone] = useState('');
   const [donationId, setDonationId] = useState('');
-  const [preview,    setPreview]    = useState<string | null>(null);
-  const [photoFile,  setPhotoFile]  = useState<File | null>(null);
+  const [preview,   setPreview]   = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cat = CATEGORIES.find((c) => c.value === category)!;
 
@@ -35,23 +36,23 @@ export default function DonatePage() {
     e.preventDefault(); setLoading(true); setError('');
     const form = e.currentTarget;
     const fd   = new FormData(form);
+    const phone = fd.get('phone') as string;
     try {
       const res = await fetch('/api/donations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title:          fd.get('title'),
-          description:    fd.get('description'),
-          quantity:       fd.get('quantity'),
+          title:       fd.get('title'),
+          description: fd.get('description'),
+          quantity:    fd.get('quantity'),
           category,
-          itemType:       fd.get('itemType'),
-          expiresAt:      fd.get('expiresAt') || null,
-          donorName:      fd.get('donorName'),
-          donorType:      fd.get('donorType'),
-          phone:          fd.get('phone'),
-          donorTelegram:  fd.get('donorTelegram') || null,
-          address:        fd.get('address'),
-          city:           fd.get('city') || 'Chennai',
+          itemType:    fd.get('itemType'),
+          expiresAt:   fd.get('expiresAt') || null,
+          donorName:   fd.get('donorName'),
+          donorType:   fd.get('donorType'),
+          phone,
+          address:     fd.get('address'),
+          city:        fd.get('city') || 'Chennai',
         }),
       });
       if (!res.ok) throw new Error(await res.text());
@@ -62,6 +63,7 @@ export default function DonatePage() {
         photoForm.append('donationId', donation.id);
         await fetch('/api/donations/upload-photo', { method: 'POST', body: photoForm });
       }
+      setDonorPhone(phone);
       setDonationId(donation.id);
       setSubmitted(true);
     } catch (err) {
@@ -71,19 +73,42 @@ export default function DonatePage() {
   }
 
   if (submitted) return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <div className="text-7xl mb-6">🎉</div>
-        <h2 className="text-3xl font-bold text-gray-800 mb-3">Donation Posted!</h2>
-        <p className="text-gray-500 leading-relaxed mb-3">Your listing is now live. NGOs in Chennai will see it.</p>
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 text-sm text-blue-800 text-left">
-          <p className="font-semibold mb-1">🔗 Save your manage link</p>
-          <p className="text-xs text-blue-600 break-all">/manage/{donationId}</p>
-          <p className="text-xs text-blue-500 mt-1">Use this to verify the receiver’s OTP and mark as collected.</p>
+    <div className="min-h-[70vh] flex items-center justify-center px-4 py-12">
+      <div className="text-center max-w-md w-full">
+        <div className="text-7xl mb-5">🎉</div>
+        <h2 className="text-3xl font-bold text-gray-800 mb-2">Donation Posted!</h2>
+        <p className="text-gray-500 mb-6">Your listing is now live and visible to everyone in your city.</p>
+
+        {/* How to check status */}
+        <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-5 text-left">
+          <h3 className="font-bold text-green-800 mb-3">📱 How to check &amp; update your donation status</h3>
+          <ol className="space-y-3 text-sm text-green-900">
+            <li className="flex gap-2">
+              <span className="font-bold shrink-0">1.</span>
+              <span>Go to <Link href="/browse" className="underline font-semibold">Browse Donations</Link> and search for your donation title or look under your phone number.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="font-bold shrink-0">2.</span>
+              <span>When a receiver claims your donation, they will <strong>call or WhatsApp you</strong> on <strong className="text-green-700">{donorPhone}</strong> to arrange pickup.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="font-bold shrink-0">3.</span>
+              <span>After handing over the item, open your donation and tap <strong>“Mark as Collected”</strong> to close the listing.</span>
+            </li>
+          </ol>
+          <div className="mt-4 bg-white border border-green-200 rounded-xl px-4 py-3 text-xs text-gray-500">
+            🔒 <strong>Your manage link</strong> (bookmark this):<br />
+            <span className="font-mono text-green-700 text-xs break-all">givesaver.in/manage/{donationId}</span>
+          </div>
         </div>
+
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 mb-6 text-left">
+          ⚠️ Never share your personal address publicly. Arrange pickup in a visible, safe spot.
+        </div>
+
         <div className="flex gap-3 justify-center flex-wrap">
-          <Link href={`/manage/${donationId}`} className="btn-secondary">📝 Manage Listing</Link>
           <Link href="/browse" className="btn-primary">Browse Donations</Link>
+          <Link href="/donate" className="btn-secondary">Post Another</Link>
         </div>
       </div>
     </div>
@@ -93,7 +118,7 @@ export default function DonatePage() {
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-white border-b"><div className="section-wrapper py-10">
         <h1 className="text-4xl font-bold text-gray-800">Post a Donation</h1>
-        <p className="text-gray-500 mt-2">Share your surplus with communities in Chennai</p>
+        <p className="text-gray-500 mt-2">Share your surplus with communities in your city</p>
       </div></div>
       <div className="section-wrapper py-10"><div className="max-w-2xl mx-auto">
         <div className="mb-8">
@@ -174,19 +199,10 @@ export default function DonatePage() {
                 </select></div>
             </div>
 
-            <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">WhatsApp / Phone *</label>
-              <input name="phone" required placeholder="+91 XXXXX XXXXX" className="input-field" /></div>
-
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Telegram Username <span className="text-gray-400 font-normal">(recommended — for OTP notifications)</span>
-              </label>
-              <input name="donorTelegram" placeholder="@yourusername" className="input-field" />
-              <p className="text-xs text-gray-400 mt-1">
-                Start a chat with{' '}
-                <a href="https://t.me/GiveSaverBot" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">@GiveSaverBot</a>{' '}
-                on Telegram first to receive OTP notifications.
-              </p>
+              <label className="block text-sm font-semibold text-gray-700 mb-1.5">WhatsApp / Phone *</label>
+              <input name="phone" required placeholder="+91 XXXXX XXXXX" className="input-field" />
+              <p className="text-xs text-gray-400 mt-1">Receivers will contact you on this number to arrange pickup. Make sure it&apos;s reachable.</p>
             </div>
 
             <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Pickup Address *</label>
@@ -199,7 +215,6 @@ export default function DonatePage() {
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 w-4 h-4 accent-green-600 shrink-0" />
                 <span className="text-sm text-amber-800 leading-relaxed">
                   I confirm items are <strong>safe, clean, and fit for use</strong>. I agree to the{' '}
-                  <Link href="/terms" target="_blank" className="underline font-semibold">Terms</Link> and{' '}
                   <Link href="/disclaimer" target="_blank" className="underline font-semibold">Disclaimer</Link>.
                 </span>
               </label>
