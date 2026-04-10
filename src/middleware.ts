@@ -1,26 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isAdminAuthenticated, ADMIN_COOKIE } from '@/lib/adminAuth';
+import { isAdminAuthenticated } from '@/lib/adminAuth';
 
-// These API routes must be reachable WITHOUT a session (login itself)
+// API routes that must be reachable WITHOUT a session
 const PUBLIC_ADMIN_API = ['/api/admin/login'];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const secret = process.env.ADMIN_SECRET ?? '';
 
-  if (!secret) return NextResponse.next();
+  // ── Block ALL /__admin/* routes unless authenticated ──────────────────────
+  if (pathname.startsWith('/__admin')) {
+    const isLoginPage = pathname === '/__admin/login';
 
-  // Protect everything under /<ADMIN_SECRET>/* except the login page itself
-  if (pathname.startsWith(`/${secret}`) && !pathname.endsWith('/login')) {
-    if (!isAdminAuthenticated(req)) {
-      const loginUrl = req.nextUrl.clone();
-      loginUrl.pathname = `/${secret}/login`;
-      loginUrl.searchParams.set('next', pathname);
-      return NextResponse.redirect(loginUrl);
+    if (!isLoginPage && !isAdminAuthenticated(req)) {
+      // Return hard 404 for the dashboard — do NOT hint that a login page exists
+      return new NextResponse(null, { status: 404 });
     }
+    // Login page itself is always reachable
+    return NextResponse.next();
   }
 
-  // Protect admin API routes — but allow the login endpoint through
+  // ── Block /api/admin/* routes unless authenticated ────────────────────────
   if (
     pathname.startsWith('/api/admin/') &&
     !PUBLIC_ADMIN_API.some((p) => pathname.startsWith(p))
