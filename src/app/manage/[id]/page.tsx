@@ -63,6 +63,9 @@ export default function ManagePage() {
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><p className="text-gray-400 animate-pulse">Loading...</p></div>;
   if (!donation) return <div className="min-h-[60vh] flex items-center justify-center"><p className="text-gray-500">Donation not found.</p></div>;
 
+  // Cast to string to prevent TypeScript narrowing issues in comparisons below
+  const currentStatus = donation.status as string;
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-white border-b"><div className="section-wrapper py-8">
@@ -75,20 +78,20 @@ export default function ManagePage() {
         <div className="card mb-6">
           <div className="flex justify-between items-start mb-3">
             <h2 className="text-xl font-bold text-gray-800">{donation.title}</h2>
-            <span className={`badge ${STATUS_STYLES[donation.status]}`}>{donation.status}</span>
+            <span className={`badge ${STATUS_STYLES[currentStatus]}`}>{currentStatus}</span>
           </div>
           <p className="text-sm text-gray-500">{donation.quantity} · {donation.city}</p>
           <p className="text-sm text-gray-400 mt-1">{donation.address}</p>
         </div>
 
         {/* OTP Verification block — shown when CLAIMED */}
-        {donation.status === 'CLAIMED' && claim && (
+        {currentStatus === 'CLAIMED' && claim && (
           <div className="card mb-6 border-2 border-yellow-200 bg-yellow-50">
             <h3 className="font-bold text-gray-800 mb-1">🔑 Verify Receiver OTP</h3>
             <p className="text-sm text-gray-600 mb-3">
               The receiver got their OTP on Telegram. Ask them to share it with you at pickup, then enter it below.
             </p>
-            {error    && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-2 mb-3">{error}</div>}
+            {error     && <div className="bg-red-50 text-red-700 text-sm rounded-xl px-4 py-2 mb-3">{error}</div>}
             {statusMsg && <div className="bg-green-50 text-green-700 text-sm rounded-xl px-4 py-2 mb-3">{statusMsg}</div>}
             <div className="flex gap-2">
               <input
@@ -109,18 +112,18 @@ export default function ManagePage() {
         )}
 
         {/* Manual status buttons */}
-        {donation.status !== 'COLLECTED' && (
+        {currentStatus !== 'COLLECTED' && (
           <div className="card">
             <h3 className="font-semibold text-gray-700 mb-3">Update Status Manually</h3>
             <div className="flex gap-3 flex-wrap">
-              {donation.status !== 'AVAILABLE'  && <button onClick={() => updateStatus('AVAILABLE')}  className="btn-secondary text-sm">✅ Mark Available</button>}
-              {donation.status !== 'CLAIMED'    && <button onClick={() => updateStatus('CLAIMED')}    className="btn-secondary text-sm">🤝 Mark Claimed</button>}
-              {donation.status !== 'COLLECTED'  && <button onClick={() => updateStatus('COLLECTED')}  className="btn-primary  text-sm">📦 Mark Collected</button>}
+              {currentStatus !== 'AVAILABLE' && <button onClick={() => updateStatus('AVAILABLE')} className="btn-secondary text-sm">✅ Mark Available</button>}
+              {currentStatus !== 'CLAIMED'   && <button onClick={() => updateStatus('CLAIMED')}   className="btn-secondary text-sm">🤝 Mark Claimed</button>}
+              {currentStatus !== 'COLLECTED' && <button onClick={() => updateStatus('COLLECTED')} className="btn-primary  text-sm">📦 Mark Collected</button>}
             </div>
           </div>
         )}
 
-        {donation.status === 'COLLECTED' && (
+        {currentStatus === 'COLLECTED' && (
           <div className="card text-center">
             <div className="text-5xl mb-3">🎉</div>
             <p className="font-bold text-gray-800">Donation Collected!</p>
