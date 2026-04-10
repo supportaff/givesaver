@@ -5,25 +5,44 @@ export type Database = {
     Tables: {
       donations: {
         Row: {
-          id:          string;
-          title:       string;
-          description: string | null;
-          quantity:    string;
-          category:    'FOOD' | 'CLOTHES' | 'BOOKS';
-          item_type:   string;
-          expires_at:  string | null;
-          status:      'AVAILABLE' | 'CLAIMED' | 'COLLECTED';
-          address:     string;
-          city:        string;
-          donor_name:  string;
-          donor_type:  'Individual' | 'Business' | 'NGO' | 'Institution';
-          phone:       string;
-          photo_url:   string | null;
-          created_at:  string;
-          updated_at:  string;
+          id:               string;
+          title:            string;
+          description:      string | null;
+          quantity:         string;
+          category:         'FOOD' | 'CLOTHES' | 'BOOKS';
+          item_type:        string;
+          expires_at:       string | null;
+          status:           'AVAILABLE' | 'CLAIMED' | 'COLLECTED';
+          address:          string;
+          city:             string;
+          donor_name:       string;
+          donor_type:       'Individual' | 'Business' | 'NGO' | 'Institution';
+          phone:            string;
+          donor_telegram:   string | null;
+          photo_url:        string | null;
+          created_at:       string;
+          updated_at:       string;
         };
         Insert: Omit<Database['public']['Tables']['donations']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['donations']['Insert']>;
+      };
+      claims: {
+        Row: {
+          id:                   string;
+          donation_id:          string;
+          receiver_name:        string;
+          receiver_phone:       string;
+          receiver_telegram:    string;
+          otp:                  string;
+          donor_otp:            string;
+          receiver_confirmed:   boolean;
+          donor_confirmed:      boolean;
+          status:               'PENDING' | 'VERIFIED' | 'EXPIRED';
+          expires_at:           string;
+          created_at:           string;
+        };
+        Insert: Omit<Database['public']['Tables']['claims']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['claims']['Insert']>;
       };
       ngo_registrations: {
         Row: {
@@ -53,4 +72,5 @@ export type Database = {
 };
 
 export type DonationRow        = Database['public']['Tables']['donations']['Row'];
+export type ClaimRow           = Database['public']['Tables']['claims']['Row'];
 export type NGORegistrationRow = Database['public']['Tables']['ngo_registrations']['Row'];
