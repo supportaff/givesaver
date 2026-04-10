@@ -1,9 +1,29 @@
 import Link from 'next/link';
 import DonationCard from '@/components/DonationCard';
-import { DONATIONS, STATS, CATEGORY_META, NGOS } from '@/lib/data';
+import { STATS, CATEGORY_META, NGOS } from '@/lib/data';
+import { createAdminClient } from '@/lib/supabase/server';
+import type { DonationRow } from '@/lib/supabase/types';
 
-export default function HomePage() {
-  const recent = DONATIONS.filter((d) => d.status === 'AVAILABLE').slice(0, 6);
+export const revalidate = 60; // ISR: refresh every 60s
+
+async function getRecentDonations(): Promise<DonationRow[]> {
+  try {
+    const supabase = createAdminClient();
+    const { data, error } = await supabase
+      .from('donations')
+      .select('*')
+      .eq('status', 'AVAILABLE')
+      .order('created_at', { ascending: false })
+      .limit(6);
+    if (error) throw error;
+    return (data as DonationRow[]) ?? [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function HomePage() {
+  const recent = await getRecentDonations();
 
   return (
     <div>
@@ -91,9 +111,17 @@ export default function HomePage() {
             </div>
             <Link href="/browse" className="btn-outline text-sm hidden md:inline-block">View All →</Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {recent.map((d) => <DonationCard key={d.id} donation={d} />)}
-          </div>
+          {recent.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-4xl mb-3">🌱</p>
+              <p className="text-gray-500">No donations yet — be the first to post one!</p>
+              <Link href="/donate" className="btn-primary mt-4 inline-block">Post a Donation</Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recent.map((d) => <DonationCard key={d.id} donation={d} />)}
+            </div>
+          )}
           <div className="text-center mt-8 md:hidden">
             <Link href="/browse" className="btn-secondary">View All Donations →</Link>
           </div>
