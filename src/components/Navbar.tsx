@@ -8,6 +8,7 @@ const links = [
   { href: '/donate',       label: 'Donate' },
   { href: '/how-it-works', label: 'How It Works' },
   { href: '/about',        label: 'About' },
+  { href: '/safety',       label: '🛡️ Safety', highlight: true },
 ];
 
 export default function Navbar() {
@@ -17,13 +18,11 @@ export default function Navbar() {
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
       <div className="section-wrapper h-16 flex items-center justify-between">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2 font-bold text-xl text-green-700">
           <span className="text-2xl">🌱</span>
           <span>GiveSaver</span>
         </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
           {links.map((l) => (
             <Link
@@ -32,6 +31,8 @@ export default function Navbar() {
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 pathname === l.href
                   ? 'text-green-700 bg-green-50'
+                  : l.highlight
+                  ? 'text-red-600 hover:bg-red-50 font-semibold'
                   : 'text-gray-600 hover:text-green-700 hover:bg-gray-50'
               }`}
             >
@@ -46,7 +47,6 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Mobile Menu Button */}
         <button
           onClick={() => setOpen(!open)}
           className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
@@ -64,7 +64,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {open && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4">
           {links.map((l) => (
@@ -75,6 +74,8 @@ export default function Navbar() {
               className={`block px-4 py-3 rounded-lg text-sm font-medium mt-1 ${
                 pathname === l.href
                   ? 'text-green-700 bg-green-50'
+                  : l.highlight
+                  ? 'text-red-600 bg-red-50'
                   : 'text-gray-600 hover:bg-gray-50'
               }`}
             >

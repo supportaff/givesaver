@@ -11,7 +11,7 @@ export default function Footer() {
           <p className="text-sm leading-relaxed text-gray-400">
             Connecting donors with NGOs to reduce waste and support communities across India.
           </p>
-          <div className="flex gap-3 mt-5">
+          <div className="flex gap-3 mt-5 flex-wrap">
             {['Food 🍱', 'Clothes 👕', 'Books 📚'].map((t) => (
               <span key={t} className="text-xs bg-gray-800 text-gray-300 px-3 py-1 rounded-full">{t}</span>
             ))}
@@ -26,6 +26,8 @@ export default function Footer() {
               { href: '/donate',       label: 'Post a Donation' },
               { href: '/how-it-works', label: 'How It Works' },
               { href: '/about',        label: 'About Us' },
+              { href: '/safety',       label: '🛡️ Trust & Safety' },
+              { href: '/pledge',       label: '🤍 Recipient Pledge' },
             ].map((l) => (
               <li key={l.href}><Link href={l.href} className="hover:text-white transition-colors">{l.label}</Link></li>
             ))}
@@ -52,16 +54,25 @@ export default function Footer() {
               { href: '/terms',      label: 'Terms & Conditions' },
               { href: '/disclaimer', label: 'Disclaimer' },
               { href: '/privacy',    label: 'Privacy Policy' },
+              { href: '/safety',     label: 'Trust & Safety' },
             ].map((l) => (
               <li key={l.href}><Link href={l.href} className="hover:text-white transition-colors">{l.label}</Link></li>
             ))}
           </ul>
           <div className="mt-6 text-sm">
-            <p className="text-gray-500">Support</p>
-            <a href="mailto:support@givesaver.in" className="text-green-400 hover:text-green-300 transition-colors">
-              support@givesaver.in
+            <p className="text-gray-500">Report Misuse</p>
+            <a href="mailto:report@givesaver.in" className="text-red-400 hover:text-red-300 transition-colors">
+              report@givesaver.in
             </a>
           </div>
+        </div>
+      </div>
+
+      {/* Anti-resale strip */}
+      <div className="bg-red-950 border-t border-red-900">
+        <div className="section-wrapper py-3 flex gap-2 items-center text-xs text-red-300">
+          <span>⛔</span>
+          <p><strong>Anti-Resale Policy:</strong> Donated items must never be resold for commercial gain. Violation leads to permanent ban and legal action. <Link href="/safety" className="underline hover:text-white">Learn more →</Link></p>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import { CATEGORY_META, STATUS_META } from '@/lib/data';
 export default function DonationCard({ donation }: { donation: Donation }) {
   const cat    = CATEGORY_META[donation.category];
   const status = STATUS_META[donation.status];
+  const needsPledge = donation.category === 'CLOTHES' || donation.category === 'BOOKS';
 
   return (
     <div className="card hover:shadow-md transition-all duration-200 flex flex-col gap-3 group">
@@ -29,7 +30,7 @@ export default function DonationCard({ donation }: { donation: Donation }) {
       {/* Description */}
       <p className="text-gray-500 text-sm leading-relaxed line-clamp-2">{donation.description}</p>
 
-      {/* Meta grid */}
+      {/* Meta */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
         <div className="flex items-center gap-1.5">
           <span className="text-gray-300">📦</span>
@@ -50,6 +51,14 @@ export default function DonationCard({ donation }: { donation: Donation }) {
         </div>
       )}
 
+      {/* Anti-resale warning for clothes & books */}
+      {needsPledge && (
+        <div className="flex items-start gap-1.5 text-xs text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">
+          <span className="shrink-0">⛔</span>
+          <span>For personal/charity use only. Resale is strictly prohibited.</span>
+        </div>
+      )}
+
       {/* Footer */}
       <div className="border-t border-gray-50 pt-3 flex justify-between items-end">
         <div>
@@ -64,10 +73,10 @@ export default function DonationCard({ donation }: { donation: Donation }) {
 
       {donation.status === 'AVAILABLE' && (
         <Link
-          href={`/donate?interest=${donation.id}`}
+          href={needsPledge ? '/pledge' : `/donate?interest=${donation.id}`}
           className="btn-primary w-full text-sm text-center py-2.5 mt-1"
         >
-          ✋ Express Interest
+          {needsPledge ? '🤍 Sign Pledge & Claim' : '✋ Express Interest'}
         </Link>
       )}
     </div>
