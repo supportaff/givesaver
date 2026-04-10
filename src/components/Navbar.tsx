@@ -7,24 +7,22 @@ const NAV_LINKS = [
   { href: '/browse',       label: 'Browse' },
   { href: '/donate',       label: 'Donate' },
   { href: '/my-donations', label: 'My Donations' },
-  { href: '/register-ngo', label: 'NGOs' },
-  { href: '/how-it-works', label: 'How It Works' },
+  { href: '/ngos',         label: 'NGO Directory' },
+  { href: '/disclaimer',   label: 'Disclaimer' },
 ];
 
 export default function Navbar() {
-  const [open, setOpen]   = useState(false);
-  const pathname          = usePathname();
+  const [open, setOpen] = useState(false);
+  const pathname        = usePathname();
 
   return (
     <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
       <div className="section-wrapper flex items-center justify-between h-16">
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
           <span className="text-2xl">🌱</span>
           <span className="font-bold text-xl text-gray-800 tracking-tight">GiveSaver</span>
         </Link>
 
-        {/* Desktop links */}
         <div className="hidden md:flex items-center gap-1">
           {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href}
@@ -39,7 +37,6 @@ export default function Navbar() {
           <Link href="/donate" className="ml-2 btn-primary text-sm py-2 px-4">+ Post Donation</Link>
         </div>
 
-        {/* Mobile hamburger */}
         <button onClick={() => setOpen((p) => !p)}
           className="md:hidden p-2 rounded-lg text-gray-500 hover:bg-gray-100">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +47,6 @@ export default function Navbar() {
         </button>
       </div>
 
-      {/* Mobile menu */}
       {open && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4 flex flex-col gap-1">
           {NAV_LINKS.map((l) => (
