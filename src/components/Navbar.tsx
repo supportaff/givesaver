@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const links = [
-  { href: '/browse',       label: 'Browse' },
-  { href: '/donate',       label: 'Donate' },
-  { href: '/how-it-works', label: 'How It Works' },
-  { href: '/about',        label: 'About' },
-  { href: '/safety',       label: '🛡️ Safety', highlight: true },
+  { href: '/browse',        label: 'Browse' },
+  { href: '/donate',        label: 'Donate' },
+  { href: '/register-ngo',  label: '🤝 Register NGO', highlight: false },
+  { href: '/how-it-works',  label: 'How It Works' },
+  { href: '/safety',        label: '🛡️ Safety', highlight: true },
 ];
 
 export default function Navbar() {
@@ -28,7 +28,7 @@ export default function Navbar() {
             <Link
               key={l.href}
               href={l.href}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 pathname === l.href
                   ? 'text-green-700 bg-green-50'
                   : l.highlight
@@ -42,24 +42,14 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link href="/donate" className="btn-primary text-sm px-4 py-2">
-            + Post Donation
-          </Link>
+          <Link href="/donate" className="btn-primary text-sm px-4 py-2">+ Post Donation</Link>
         </div>
 
-        <button
-          onClick={() => setOpen(!open)}
-          className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
-          aria-label="Toggle menu"
-        >
+        <button onClick={() => setOpen(!open)} className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100" aria-label="Toggle menu">
           {open ? (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
           ) : (
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
           )}
         </button>
       </div>
@@ -67,24 +57,15 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4">
           {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
+            <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
               className={`block px-4 py-3 rounded-lg text-sm font-medium mt-1 ${
-                pathname === l.href
-                  ? 'text-green-700 bg-green-50'
-                  : l.highlight
-                  ? 'text-red-600 bg-red-50'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
+                pathname === l.href ? 'text-green-700 bg-green-50' :
+                l.highlight ? 'text-red-600 bg-red-50' : 'text-gray-600 hover:bg-gray-50'
+              }`}>
               {l.label}
             </Link>
           ))}
-          <Link href="/donate" onClick={() => setOpen(false)} className="btn-primary w-full mt-3 text-sm text-center block">
-            + Post Donation
-          </Link>
+          <Link href="/donate" onClick={() => setOpen(false)} className="btn-primary w-full mt-3 text-sm text-center block">+ Post Donation</Link>
         </div>
       )}
     </header>
