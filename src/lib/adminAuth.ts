@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const ADMIN_SECRET   = process.env.ADMIN_SECRET   ?? '';
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? '';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? '';
 
 /** Cookie name that stores the session token */
@@ -12,9 +13,11 @@ export function isAdminAuthenticated(req: NextRequest): boolean {
   return ADMIN_SECRET.length > 0 && cookie === ADMIN_SECRET;
 }
 
-/** Verify a plain-text password against ADMIN_PASSWORD env var */
-export function verifyAdminPassword(password: string): boolean {
-  return ADMIN_PASSWORD.length > 0 && password === ADMIN_PASSWORD;
+/** Verify username AND password against env vars */
+export function verifyAdminCredentials(username: string, password: string): boolean {
+  const usernameOk = ADMIN_USERNAME.length > 0 && username === ADMIN_USERNAME;
+  const passwordOk = ADMIN_PASSWORD.length > 0 && password === ADMIN_PASSWORD;
+  return usernameOk && passwordOk;
 }
 
 /** Build a redirect to login, preserving return path */
