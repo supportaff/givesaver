@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAdminAuthenticated, ADMIN_COOKIE } from '@/lib/adminAuth';
 
+// These API routes must be reachable WITHOUT a session (login itself)
+const PUBLIC_ADMIN_API = ['/api/admin/login'];
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const secret = process.env.ADMIN_SECRET ?? '';
@@ -17,8 +20,11 @@ export function middleware(req: NextRequest) {
     }
   }
 
-  // Protect admin API routes
-  if (pathname.startsWith('/api/admin/')) {
+  // Protect admin API routes — but allow the login endpoint through
+  if (
+    pathname.startsWith('/api/admin/') &&
+    !PUBLIC_ADMIN_API.some((p) => pathname.startsWith(p))
+  ) {
     if (!isAdminAuthenticated(req)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
