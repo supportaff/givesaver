@@ -2,11 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { isUUID } from '@/lib/validate';
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function PATCH(req: NextRequest, ctx: RouteContext) {
+  const { id } = await ctx.params;
   if (!isUUID(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
 
   let body: Record<string, unknown>;
@@ -29,11 +28,8 @@ export async function PATCH(
   return NextResponse.json(data);
 }
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
+export async function DELETE(_req: NextRequest, ctx: RouteContext) {
+  const { id } = await ctx.params;
   if (!isUUID(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
   const supabase = createAdminClient();
   const { error } = await supabase.from('donations').delete().eq('id', id);
