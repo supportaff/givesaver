@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/server';
+import type { Database } from '@/lib/supabase/types';
+
+type DonationUpdate = Database['public']['Tables']['donations']['Update'];
 
 export async function PATCH(
   req: Request,
@@ -7,16 +10,22 @@ export async function PATCH(
 ) {
   try {
     const { id }     = await params;
-    const { status } = await req.json() as { status: 'AVAILABLE' | 'CLAIMED' | 'COLLECTED' };
+    const body       = await req.json() as { status: string };
+    const { status } = body;
 
     if (!['AVAILABLE', 'CLAIMED', 'COLLECTED'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
     const supabase = createAdminClient();
+
+    const payload: DonationUpdate = {
+      status: status as 'AVAILABLE' | 'CLAIMED' | 'COLLECTED',
+    };
+
     const { data, error } = await supabase
       .from('donations')
-      .update({ status })
+      .update(payload)
       .eq('id', id)
       .select()
       .single();
