@@ -10,7 +10,7 @@ import type { DonationRow } from '@/lib/supabase/types';
 const DonationMap = dynamic(() => import('@/components/DonationMap'), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-3">
+    <div className="w-full h-full min-h-[420px] bg-gray-100 flex flex-col items-center justify-center gap-3">
       <div className="text-5xl animate-pulse">📍</div>
       <p className="text-gray-400 text-sm font-medium">Loading map...</p>
     </div>
@@ -23,6 +23,8 @@ export default function BrowsePage() {
   const [category,  setCategory]  = useState<Category | 'ALL'>('ALL');
   const [status,    setStatus]    = useState<Status | 'ALL'>('AVAILABLE');
   const [search,    setSearch]    = useState('');
+  // mobile-only toggle; on md+ both panes are always shown
+  const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
 
   useEffect(() => {
     fetch('/api/donations')
@@ -52,10 +54,9 @@ export default function BrowsePage() {
   const hasActiveFilter = category !== 'ALL' || status !== 'AVAILABLE' || search;
 
   return (
-    // Full viewport height minus the navbar — use min-h-screen, overflow hidden so only inner panels scroll
     <div className="flex flex-col" style={{ height: 'calc(100vh - 64px)', minHeight: 600 }}>
 
-      {/* ── Top filter bar ── */}
+      {/* ── Filter bar ── */}
       <div className="bg-white border-b border-gray-100 shrink-0 px-4 py-3">
         <div className="max-w-screen-2xl mx-auto flex flex-wrap items-center gap-3">
 
@@ -73,7 +74,6 @@ export default function BrowsePage() {
             ))}
           </div>
 
-          {/* Divider */}
           <div className="h-6 w-px bg-gray-200 hidden sm:block" />
 
           {/* Search */}
@@ -83,11 +83,11 @@ export default function BrowsePage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search item, area..."
-              className="pl-8 pr-4 py-2 text-sm bg-gray-100 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-green-400 w-52"
+              className="pl-8 pr-4 py-2 text-sm bg-gray-100 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-green-400 w-44 sm:w-52"
             />
           </div>
 
-          {/* Status filter */}
+          {/* Status */}
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as Status | 'ALL')}
@@ -99,7 +99,6 @@ export default function BrowsePage() {
             <option value="COLLECTED">Collected</option>
           </select>
 
-          {/* Clear */}
           {hasActiveFilter && (
             <button
               onClick={() => { setCategory('ALL'); setStatus('AVAILABLE'); setSearch(''); }}
@@ -109,23 +108,78 @@ export default function BrowsePage() {
             </button>
           )}
 
-          {/* Result count — pushed right */}
-          <div className="ml-auto flex items-center gap-2">
+          {/* Right side: count + mobile toggle */}
+          <div className="ml-auto flex items-center gap-3">
             {!loading && (
-              <span className="text-xs text-gray-400 font-medium">
+              <span className="text-xs text-gray-400 font-medium hidden sm:inline">
                 <span className="text-gray-700 font-bold">{filtered.length}</span> listing{filtered.length !== 1 ? 's' : ''}
               </span>
             )}
+
+            {/* Mobile-only List / Map toggle — hidden on md+ */}
+            <div className="flex md:hidden items-center bg-gray-100 rounded-xl p-1 gap-0.5">
+              <button
+                onClick={() => setMobileView('list')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  mobileView === 'list' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'
+                }`}>
+                📋 List
+              </button>
+              <button
+                onClick={() => setMobileView('map')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  mobileView === 'map' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500'
+                }`}>
+                🗺️ Map
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── Split pane: Map left | Cards right ── */}
-      <div className="flex flex-1 overflow-hidden max-w-screen-2xl w-full mx-auto">
+      {/* ── MOBILE: full-width map or list (below md) ── */}
+      <div className="md:hidden flex-1 overflow-hidden flex flex-col">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center flex-1">
+            <div className="text-5xl mb-4 animate-pulse">⏳</div>
+            <p className="text-gray-400 text-sm">Loading...</p>
+          </div>
+        ) : mobileView === 'map' ? (
+          <div className="flex-1 overflow-hidden">
+            <DonationMap donations={filtered} fullHeight />
+          </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
+            {/* count strip */}
+            <p className="text-xs text-gray-400 mb-4 font-medium">
+              <span className="text-gray-700 font-bold">{filtered.length}</span> listing{filtered.length !== 1 ? 's' : ''}
+              {filtered.length > 0 && <span className="text-gray-400"> — tap 🗺️ Map to see pins</span>}
+            </p>
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24">
+                <p className="text-5xl mb-4">🔍</p>
+                <p className="text-lg font-semibold text-gray-700">
+                  {donations.length === 0 ? 'No donations yet' : 'No matches found'}
+                </p>
+                <p className="text-gray-400 mt-1 text-sm">
+                  {donations.length === 0 ? 'Be the first to post something!' : 'Try clearing your filters'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4">
+                {filtered.map((d) => <DonationCard key={d.id} donation={d} />)}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
-        {/* LEFT — sticky map pane (hidden on mobile, visible md+) */}
-        <div className="hidden md:flex flex-col" style={{ width: '48%', minWidth: 360 }}>
-          <div className="h-full relative">
+      {/* ── DESKTOP: side-by-side split pane (md+) ── */}
+      <div className="hidden md:flex flex-1 overflow-hidden max-w-screen-2xl w-full mx-auto">
+
+        {/* LEFT — sticky map */}
+        <div className="flex flex-col shrink-0" style={{ width: '48%', minWidth: 360 }}>
+          <div className="h-full">
             {loading ? (
               <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-3">
                 <div className="text-5xl animate-pulse">📍</div>
@@ -137,17 +191,11 @@ export default function BrowsePage() {
           </div>
         </div>
 
-        {/* Vertical divider */}
-        <div className="hidden md:block w-px bg-gray-200 shrink-0" />
+        {/* Divider */}
+        <div className="w-px bg-gray-200 shrink-0" />
 
-        {/* RIGHT — scrollable cards pane */}
+        {/* RIGHT — scrollable cards */}
         <div className="flex-1 overflow-y-auto bg-gray-50">
-
-          {/* Mobile-only map banner */}
-          <div className="md:hidden bg-green-50 border-b border-green-100 px-4 py-3 text-xs text-green-700 font-medium flex items-center gap-2">
-            <span>📍</span> Map view available on tablet and desktop
-          </div>
-
           <div className="p-5">
             {loading ? (
               <div className="flex flex-col items-center justify-center py-32">
@@ -161,9 +209,7 @@ export default function BrowsePage() {
                   {donations.length === 0 ? 'No donations yet' : 'No matches found'}
                 </p>
                 <p className="text-gray-400 mt-1 text-sm">
-                  {donations.length === 0
-                    ? 'Be the first to post something!'
-                    : 'Try a different category or clear your filters'}
+                  {donations.length === 0 ? 'Be the first to post something!' : 'Try a different category or clear your filters'}
                 </p>
               </div>
             ) : (
