@@ -4,31 +4,31 @@ import Link from 'next/link';
 
 const DONOR_STEPS = [
   {
-    icon: '\u{1F4DD}',
+    icon: '📝',
     title: 'Fill in your donation details',
     desc: 'Go to Post a Donation. Enter the item name, category (Food / Clothes / Books), quantity, pickup address, and your phone number. Add an expiry date for food items. Takes under 2 minutes — no account needed.',
     tip: 'For cooked food, post it as soon as possible so receivers can collect before it expires.',
   },
   {
-    icon: '\u2705',
+    icon: '✅',
     title: 'Your listing goes live instantly',
     desc: 'Your donation is immediately visible on the Browse page for everyone in Chennai. You will receive a unique Manage link — save it! You will need it to update or close your listing later.',
     tip: 'Copy your Manage link from the success screen and save it in your notes.',
   },
   {
-    icon: '\u{1F4F2}',
+    icon: '📲',
     title: 'A receiver contacts you on WhatsApp',
-    desc: 'When someone is interested, they fill in their name and phone number on the listing. WhatsApp will open on their end with a pre-filled message sent to YOU. You will receive a WhatsApp message with their details — reply to agree on a pickup time.',
+    desc: 'When someone is interested, they fill in their name and phone number on the listing. WhatsApp opens on their end with a pre-filled message sent to YOU. You will receive a WhatsApp message with their details — reply to agree on a pickup time.',
     tip: 'You never have to call a stranger first — they reach out to you.',
   },
   {
-    icon: '\u{1F91D}',
+    icon: '🤝',
     title: 'Hand over the item',
     desc: 'Meet the receiver at your agreed pickup location. Hand over the donation. That is it — you have done your part. The item finds a new home instead of going to waste.',
     tip: 'Meet in a visible, public spot for safety. A shop entrance or building lobby works great.',
   },
   {
-    icon: '\u{1F4CB}',
+    icon: '📋',
     title: 'Mark as Collected',
     desc: 'After the handoff, open your Manage link (or go to My Donations → enter your phone number). Click Mark as Collected. This closes the listing and updates the live stats. Only you as the donor can do this step.',
     tip: 'Mark it collected promptly so other receivers know it is gone.',
@@ -37,37 +37,37 @@ const DONOR_STEPS = [
 
 const RECEIVER_STEPS = [
   {
-    icon: '\u{1F50D}',
+    icon: '🔍',
     title: 'Browse available donations',
     desc: 'Go to Browse Donations. Filter by category (Food, Clothes, Books) or search by item name or area. All listings show the item, quantity, area, and how long ago it was posted. Food listings automatically disappear after expiry.',
     tip: 'Check the Expires label on food items — collect quickly if it expires soon.',
   },
   {
-    icon: '\u{1F4E6}',
-    title: 'Tap \u201cI want this\u201d on a listing',
-    desc: 'Click the green \u201cI want this — Contact Donor\u201d button on any Available listing. A short form slides open asking for your name and WhatsApp number. You can also add an optional message like when you can collect.',
+    icon: '📦',
+    title: 'Tap "I want this" on a listing',
+    desc: 'Click the green "I want this — Contact Donor" button on any Available listing. A short form slides open asking for your name and WhatsApp number. You can also add an optional message like when you can collect.',
     tip: 'Be honest about when you can pick up — it helps the donor plan.',
   },
   {
-    icon: '\u{1F4CB}',
+    icon: '📋',
     title: 'Accept the disclaimer',
     desc: 'Tick the checkbox confirming that DontWaste is a free platform, you will inspect items before accepting, and you will not resell donated goods. This keeps the platform safe and fair for everyone.',
     tip: 'Read it — it only takes 10 seconds and protects both sides.',
   },
   {
-    icon: '\u{1F4AC}',
+    icon: '💬',
     title: 'WhatsApp opens with a pre-filled message',
-    desc: 'As soon as you submit, WhatsApp opens with a ready-to-send message already filled in — it includes your name, phone number, the item details, and pickup address. Just hit Send. The donor\u2019s number is never shown on screen.',
-    tip: 'If WhatsApp does not open, tap the \u201cRe-open WhatsApp\u201d button on the confirmation screen.',
+    desc: "As soon as you submit, WhatsApp opens with a ready-to-send message already filled in — it includes your name, phone number, the item details, and pickup address. Just hit Send. The donor's number is never shown on screen.",
+    tip: 'If WhatsApp does not open, tap the "Re-open WhatsApp" button on the confirmation screen.',
   },
   {
-    icon: '\u{1F91D}',
+    icon: '🤝',
     title: 'Coordinate and collect',
     desc: 'The donor will reply on WhatsApp to confirm a pickup time and location. Go collect the item at the agreed time. Inspect it on the spot — you are free to decline if something seems off.',
     tip: 'Always meet in a public place. Never pay any money — all donations are 100% free.',
   },
   {
-    icon: '\u2728',
+    icon: '✨',
     title: 'Done — you helped cut waste!',
     desc: 'Once you have collected the item, the donor marks it as Collected on their end. The listing closes, the live stats update, and one more item is saved from going to waste. Thank you for being part of this.',
     tip: 'If you no longer need the item, please let the donor know so they can re-list it for someone else.',
@@ -100,7 +100,7 @@ export default function HowItWorks() {
                   ? 'bg-green-600 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}>
-              \u{1F381} I\u2019m a Donor
+              🎁 I&apos;m a Donor
             </button>
             <button
               onClick={() => setTab('receiver')}
@@ -109,7 +109,7 @@ export default function HowItWorks() {
                   ? 'bg-green-600 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}>
-              \u{1F91C} I\u2019m a Receiver
+              🙌 I&apos;m a Receiver
             </button>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function HowItWorks() {
           {steps.map((s, i) => (
             <div key={i} className="relative flex gap-5">
 
-              {/* Left: number bubble + connector line */}
+              {/* Left: icon bubble + connector line */}
               <div className="flex flex-col items-center">
                 <div className="w-12 h-12 rounded-2xl bg-green-100 border-2 border-green-200 flex items-center justify-center shrink-0 z-10">
                   <span className="text-2xl">{s.icon}</span>
@@ -137,7 +137,7 @@ export default function HowItWorks() {
                 <h3 className="font-bold text-gray-800 text-base mb-1.5">{s.title}</h3>
                 <p className="text-sm text-gray-500 leading-relaxed mb-2">{s.desc}</p>
                 <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2">
-                  <span className="text-sm shrink-0">\u{1F4A1}</span>
+                  <span className="text-sm shrink-0">💡</span>
                   <p className="text-xs text-amber-800 leading-relaxed">{s.tip}</p>
                 </div>
               </div>
@@ -151,22 +151,22 @@ export default function HowItWorks() {
             <>
               <Link href="/donate"
                 className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-xl transition-colors shadow text-center">
-                \u{1F381} Post a Donation Now
+                🎁 Post a Donation Now
               </Link>
               <Link href="/my-donations"
                 className="border-2 border-green-600 text-green-700 font-bold py-3 px-10 rounded-xl hover:bg-green-50 transition-colors text-center">
-                \u{1F4CB} Manage My Donations
+                📋 Manage My Donations
               </Link>
             </>
           ) : (
             <>
               <Link href="/browse"
                 className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-10 rounded-xl transition-colors shadow text-center">
-                \u{1F50D} Browse Donations
+                🔍 Browse Donations
               </Link>
               <Link href="/browse?category=FOOD"
                 className="border-2 border-green-600 text-green-700 font-bold py-3 px-10 rounded-xl hover:bg-green-50 transition-colors text-center">
-                \u{1F371} Browse Food Only
+                🍱 Browse Food Only
               </Link>
             </>
           )}
