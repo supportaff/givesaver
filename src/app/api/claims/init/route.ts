@@ -19,7 +19,6 @@ export async function POST(req: Request) {
   const receiverPhone = sanitiseStr(body.receiverPhone, 20);
   const message       = sanitiseStr(body.message,       300);
 
-  // Validate inputs
   if (!isUUID(donationId)) {
     return NextResponse.json({ error: 'Invalid donation ID' }, { status: 400 });
   }
@@ -35,12 +34,13 @@ export async function POST(req: Request) {
 
     const { data: donation, error: dErr } = await supabase
       .from('donations')
-      .select('id,status,donor_name,phone')
+      .select('id,status,donor_name,phone,title,quantity,address,city,expires_at')
       .eq('id', donationId)
       .single();
     if (dErr || !donation) return NextResponse.json({ error: 'Donation not found' }, { status: 404 });
     if (donation.status !== 'AVAILABLE') return NextResponse.json({ error: 'Donation is no longer available' }, { status: 409 });
 
+    // Insert claim record — status stays AVAILABLE until DONOR marks it
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: cErr } = await supabase.from('claims').insert([{
       donation_id:    donationId,
@@ -51,30 +51,28 @@ export async function POST(req: Request) {
     } as any]);
     if (cErr) throw cErr;
 
-    // Mark donation as CLAIMED
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await supabase.from('donations').update({ status: 'CLAIMED' } as any).eq('id', donationId);
+    // ⚠️ Do NOT auto-mark donation as CLAIMED — only the donor can do that via /manage
 
-    // Build WhatsApp URL server-side — donor phone NEVER sent to client
-    const rawPhone  = donation.phone.replace(/[^0-9]/g, '').replace(/^0/, '');
-    const e164      = rawPhone.startsWith('91') ? rawPhone : `91${rawPhone}`;
+    // Build WhatsApp URL — donor phone never sent to client
+    const rawPhone = donation.phone.replace(/[^0-9]/g, '').replace(/^0/, '');
+    const e164     = rawPhone.startsWith('91') ? rawPhone : `91${rawPhone}`;
+    const expiry   = donation.expires_at ? `\n⏰ Expiry: ${donation.expires_at}` : '';
     const lines = [
-      `\u{1F44B} Hi ${donation.donor_name},`,
-      `I saw your donation on *GiveSaver* and would like to collect.`,
+      `👋 Hi ${donation.donor_name},`,
+      `I found your donation on *DontWaste* and I\'d like to collect it.`,
       ``,
-      `\u{1F464} My name: ${receiverName}`,
-      `\u{1F4DE} My phone: ${receiverPhone.trim()}`,
-      message ? `\u{1F4AC} ${message}` : `Can we arrange a pickup? Thank you \u{1F64F}`,
+      `📦 Item: *${donation.title}* — ${donation.quantity}${expiry}`,
+      `📍 Pickup: ${donation.address}, ${donation.city}`,
       ``,
-      `\u2014 Sent via GiveSaver`,
+      `👤 My name: ${receiverName}`,
+      `📞 My phone: ${receiverPhone.trim()}`,
+      message ? `💬 ${message}` : `Can we arrange a pickup? Thank you 🙏`,
+      ``,
+      `— Sent via DontWaste (dontwaste.in)`,
     ];
     const waURL = `https://wa.me/${e164}?text=${encodeURIComponent(lines.join('\n'))}`;
 
-    // Return ONLY the WhatsApp redirect URL — no phone number exposed
-    return NextResponse.json({
-      waURL,
-      message: 'Claim submitted!',
-    });
+    return NextResponse.json({ waURL, message: 'Claim submitted!' });
   } catch {
     return NextResponse.json({ error: 'Failed to submit claim' }, { status: 500 });
   }
