@@ -1,10 +1,24 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import DonationCard from '@/components/DonationCard';
 import { CATEGORY_META } from '@/lib/data';
 import type { Category, Status } from '@/lib/data';
 import type { DonationRow } from '@/lib/supabase/types';
+
+// Leaflet must NOT be SSR-rendered (it needs window)
+const DonationMap = dynamic(() => import('@/components/DonationMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl border border-gray-200 bg-gray-50 flex items-center justify-center" style={{ height: 480 }}>
+      <div className="text-center">
+        <div className="text-4xl mb-3 animate-pulse">\ud83d\uddfa\ufe0f</div>
+        <p className="text-gray-400 text-sm">Loading map...</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function BrowsePage() {
   const [donations, setDonations] = useState<DonationRow[]>([]);
@@ -12,6 +26,7 @@ export default function BrowsePage() {
   const [category,  setCategory]  = useState<Category | 'ALL'>('ALL');
   const [status,    setStatus]    = useState<Status | 'ALL'>('ALL');
   const [search,    setSearch]    = useState('');
+  const [view,      setView]      = useState<'list' | 'map'>('list');
 
   useEffect(() => {
     fetch('/api/donations')
@@ -32,7 +47,7 @@ export default function BrowsePage() {
   }), [donations, category, status, search]);
 
   const tabs: { key: Category | 'ALL'; emoji: string; label: string }[] = [
-    { key: 'ALL',     emoji: '🌟', label: 'All' },
+    { key: 'ALL',     emoji: '\ud83c\udf1f', label: 'All' },
     { key: 'FOOD',    emoji: CATEGORY_META.FOOD.emoji,    label: CATEGORY_META.FOOD.label },
     { key: 'CLOTHES', emoji: CATEGORY_META.CLOTHES.emoji, label: CATEGORY_META.CLOTHES.label },
     { key: 'BOOKS',   emoji: CATEGORY_META.BOOKS.emoji,   label: CATEGORY_META.BOOKS.label },
@@ -62,10 +77,10 @@ export default function BrowsePage() {
           ))}
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-3 mb-8">
+        {/* Filters + View Toggle */}
+        <div className="flex flex-wrap gap-3 mb-6 items-center">
           <div className="relative flex-1 min-w-[200px] max-w-xs">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">\ud83d\udd0d</span>
             <input value={search} onChange={(e) => setSearch(e.target.value)}
               placeholder="Search title, city, type..." className="input-field pl-9" />
           </div>
@@ -76,19 +91,47 @@ export default function BrowsePage() {
             <option value="COLLECTED">Collected</option>
           </select>
           {(category !== 'ALL' || status !== 'ALL' || search) && (
-            <button onClick={() => { setCategory('ALL'); setStatus('ALL'); setSearch(''); }} className="btn-secondary text-sm">Clear Filters</button>
+            <button onClick={() => { setCategory('ALL'); setStatus('ALL'); setSearch(''); }} className="btn-secondary text-sm">Clear</button>
           )}
+
+          {/* View toggle — pushed to the right */}
+          <div className="ml-auto flex items-center bg-gray-100 rounded-xl p-1 gap-1">
+            <button
+              onClick={() => setView('list')}
+              title="List view"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                view === 'list' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}>
+              \ud83d\udccb List
+            </button>
+            <button
+              onClick={() => setView('map')}
+              title="Map view"
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                view === 'map' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}>
+              \ud83d\uddfa\ufe0f Map
+            </button>
+          </div>
         </div>
 
-        {/* Results */}
+        {/* Results count */}
+        {!loading && filtered.length > 0 && (
+          <p className="text-sm text-gray-400 mb-5">
+            Showing <span className="font-semibold text-gray-700">{filtered.length}</span> donation{filtered.length !== 1 ? 's' : ''}
+            {view === 'map' && <span className="text-gray-400"> &mdash; click any pin to see details</span>}
+          </p>
+        )}
+
+        {/* Loading */}
         {loading ? (
           <div className="text-center py-24">
-            <div className="text-5xl mb-4 animate-pulse">⏳</div>
+            <div className="text-5xl mb-4 animate-pulse">\u23f3</div>
             <p className="text-gray-500">Loading donations...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-24">
-            <p className="text-5xl mb-4">🔍</p>
+            <p className="text-5xl mb-4">\ud83d\udd0d</p>
             <p className="text-xl font-semibold text-gray-700">
               {donations.length === 0 ? 'No donations yet' : 'No donations found'}
             </p>
@@ -96,15 +139,12 @@ export default function BrowsePage() {
               {donations.length === 0 ? 'Be the first to post a donation!' : 'Try adjusting your filters'}
             </p>
           </div>
+        ) : view === 'list' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filtered.map((d) => <DonationCard key={d.id} donation={d} />)}
+          </div>
         ) : (
-          <>
-            <p className="text-sm text-gray-400 mb-5">
-              Showing <span className="font-semibold text-gray-700">{filtered.length}</span> donation{filtered.length !== 1 ? 's' : ''}
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((d) => <DonationCard key={d.id} donation={d} />)}
-            </div>
-          </>
+          <DonationMap donations={filtered} />
         )}
       </div>
     </div>

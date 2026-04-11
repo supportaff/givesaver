@@ -13,12 +13,15 @@
     "react": "^19",
     "react-dom": "^19",
     "@supabase/supabase-js": "^2.49.4",
-    "@supabase/ssr": "^0.5.2"
+    "@supabase/ssr": "^0.5.2",
+    "leaflet": "^1.9.4",
+    "react-leaflet": "^4.2.1"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/leaflet": "^1.9.14",
     "autoprefixer": "^10",
     "postcss": "^8",
     "tailwindcss": "^3",
