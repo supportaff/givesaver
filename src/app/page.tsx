@@ -3,6 +3,7 @@ import DonationCard from '@/components/DonationCard';
 import { CATEGORY_META } from '@/lib/data';
 import { createAdminClient } from '@/lib/supabase/server';
 import FoodCalculator from '@/components/FoodCalculator';
+import HowItWorks from '@/components/HowItWorks';
 import type { DonationRow } from '@/lib/supabase/types';
 
 export const revalidate = 60;
@@ -47,24 +48,24 @@ export default async function HomePage() {
   const [recent, stats] = await Promise.all([getRecentDonations(), getLiveStats()]);
 
   const liveStatCards = [
-    { label: 'Total Donations',   value: stats.total,     emoji: '📦' },
-    { label: 'Available Now',     value: stats.available, emoji: '🟢' },
-    { label: 'Already Collected', value: stats.collected, emoji: '✅' },
-    { label: 'Food Listings',     value: stats.food,      emoji: '🍱' },
-    { label: 'Clothes Listings',  value: stats.clothes,   emoji: '👕' },
-    { label: 'Book Listings',     value: stats.books,     emoji: '📚' },
+    { label: 'Total Donations',   value: stats.total,     emoji: '\u{1F4E6}' },
+    { label: 'Available Now',     value: stats.available, emoji: '\u{1F7E2}' },
+    { label: 'Already Collected', value: stats.collected, emoji: '\u2705' },
+    { label: 'Food Listings',     value: stats.food,      emoji: '\u{1F371}' },
+    { label: 'Clothes Listings',  value: stats.clothes,   emoji: '\u{1F455}' },
+    { label: 'Book Listings',     value: stats.books,     emoji: '\u{1F4DA}' },
   ];
 
   return (
     <div>
 
-      {/* ── Good-Cause Banner ──────────────────────── */}
+      {/* ── Good-Cause Banner */}
       <div className="bg-green-700 text-white text-center py-2.5 px-4 text-sm font-medium tracking-wide">
         💚 DontWaste is <strong>100% free</strong> and non-commercial. We make no money here.
         This platform exists purely for a good cause — please use it responsibly and don&apos;t misuse it.
       </div>
 
-      {/* ── Hero ───────────────────────────────────── */}
+      {/* ── Hero */}
       <section className="relative bg-gradient-to-br from-green-700 via-green-600 to-emerald-500 text-white overflow-hidden">
         <div className="absolute inset-0 opacity-10 pointer-events-none select-none">
           <div className="absolute top-10 left-10 text-9xl">🌱</div>
@@ -97,7 +98,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Live Stats ─────────────────────────────── */}
+      {/* ── Live Stats */}
       <section className="bg-gray-900 text-white py-8">
         <div className="section-wrapper">
           <p className="text-center text-xs text-gray-500 uppercase tracking-widest mb-5">Live numbers from our database</p>
@@ -113,54 +114,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── How It Works ───────────────────────────── */}
-      <section className="bg-white py-16">
-        <div className="section-wrapper">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800">How DontWaste Works</h2>
-            <p className="text-gray-500 mt-2 max-w-xl mx-auto">
-              No sign-up. No approval process. Post in 2 minutes and let receivers claim directly.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {[
-              {
-                icon: '📝', step: '1',
-                title: 'Post Your Donation',
-                desc: 'Fill in what you\'re donating — food, clothes, or books — along with the quantity, pickup address, and your phone number. Takes under 2 minutes.',
-              },
-              {
-                icon: '🔍', step: '2',
-                title: 'Receiver Browses & Claims',
-                desc: 'Anyone can search listings and claim your item. They provide their name and phone number to register the claim.',
-              },
-              {
-                icon: '📞', step: '3',
-                title: 'Direct Contact',
-                desc: 'Once claimed, the donor\'s phone number is shown to the receiver. They call or WhatsApp each other to agree on a pickup time and place.',
-              },
-              {
-                icon: '✅', step: '4',
-                title: 'Mark as Collected',
-                desc: 'After the handoff, the donor marks the donation as Collected. Simple, honest, and done — no app, no OTP, no fuss.',
-              },
-            ].map((s) => (
-              <div key={s.step} className="relative">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center text-xl shrink-0">
-                    {s.icon}
-                  </div>
-                  <span className="text-xs font-bold text-green-500 uppercase tracking-wider">Step {s.step}</span>
-                </div>
-                <h3 className="font-bold text-gray-800 mb-2">{s.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ── How It Works — full interactive component */}
+      <HowItWorks />
 
-      {/* ── Category Cards ─────────────────────────── */}
+      {/* ── Category Cards */}
       <section className="bg-gray-50 py-16">
         <div className="section-wrapper">
           <div className="text-center mb-10">
@@ -181,7 +138,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Food Calculator ────────────────────────── */}
+      {/* ── Food Calculator */}
       <section className="bg-white py-16">
         <div className="section-wrapper">
           <div className="text-center mb-10">
@@ -194,7 +151,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Recent Donations ───────────────────────── */}
+      {/* ── Recent Donations */}
       <section className="bg-gray-50 py-16">
         <div className="section-wrapper">
           <div className="flex justify-between items-end mb-8">
@@ -221,7 +178,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Misuse Warning ─────────────────────────── */}
+      {/* ── Misuse Warning */}
       <section className="bg-green-900 text-white py-8">
         <div className="section-wrapper max-w-3xl text-center">
           <p className="text-2xl mb-3">🙏</p>
@@ -238,7 +195,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Disclaimer Bar ─────────────────────────── */}
+      {/* ── Disclaimer Bar */}
       <section className="bg-amber-50 border-y border-amber-200 py-5">
         <div className="section-wrapper flex gap-3 items-start">
           <span className="text-xl shrink-0 mt-0.5">⚠️</span>
