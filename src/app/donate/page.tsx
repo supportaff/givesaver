@@ -4,6 +4,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { ITEM_TYPES } from '@/lib/data';
 import type { Category } from '@/lib/data';
+import { validateIndianPhone } from '@/lib/phone';
 
 const AddressPicker = dynamic(() => import('@/components/AddressPicker'), {
   ssr: false,
@@ -45,10 +46,11 @@ export default function DonatePage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!address.trim()) { setError('Please select or enter a pickup address.'); return; }
+    const fd    = new FormData(e.currentTarget);
+    const phone = (fd.get('phone') as string ?? '').trim();
+    const phoneErr = validateIndianPhone(phone);
+    if (phoneErr) { setError(phoneErr); return; }
     setLoading(true); setError('');
-    const form = e.currentTarget;
-    const fd   = new FormData(form);
-    const phone = fd.get('phone') as string;
     try {
       const res = await fetch('/api/donations', {
         method:  'POST',
@@ -83,7 +85,6 @@ export default function DonatePage() {
     } finally { setLoading(false); }
   }
 
-  /* ─── SUCCESS SCREEN ─── */
   if (submitted) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -121,7 +122,6 @@ export default function DonatePage() {
     </div>
   );
 
-  /* ─── FORM ─── */
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="bg-white border-b">
@@ -130,20 +130,15 @@ export default function DonatePage() {
           <p className="text-gray-500 mt-1 text-sm">Share your surplus with communities in your city</p>
         </div>
       </div>
-
       <div className="section-wrapper py-8">
         <div className="max-w-2xl mx-auto">
-
-          {/* Category selector */}
           <div className="mb-6">
             <p className="text-xs font-bold text-gray-500 mb-3 uppercase tracking-wider">Select Category</p>
             <div className="grid grid-cols-3 gap-3">
               {CATEGORIES.map((c) => (
                 <button key={c.value} type="button" onClick={() => setCategory(c.value)}
                   className={`flex flex-col items-center py-4 px-2 rounded-2xl border-2 font-semibold text-sm transition-all active:scale-95 ${
-                    category === c.value
-                      ? 'border-green-500 bg-green-50 text-green-700 shadow-sm'
-                      : 'border-gray-200 text-gray-500 bg-white hover:border-gray-300'
+                    category === c.value ? 'border-green-500 bg-green-50 text-green-700 shadow-sm' : 'border-gray-200 text-gray-500 bg-white hover:border-gray-300'
                   }`}>
                   <span className="text-3xl mb-1.5">{c.emoji}</span>
                   <span className="text-xs">{c.label}</span>
@@ -151,24 +146,17 @@ export default function DonatePage() {
               ))}
             </div>
           </div>
-
           <div className="card">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 mb-5">{error}</div>
-            )}
+            {error && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 mb-5">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-5">
-
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Donation Title *</label>
                 <input name="title" required placeholder={cat.hint} className="input-field" />
               </div>
-
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description</label>
                 <textarea name="description" rows={3} placeholder="Describe the items in detail..." className="input-field resize-none" />
               </div>
-
-              {/* Photo upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                   Photo <span className="text-gray-400 font-normal text-xs">(optional, max 5 MB)</span>
@@ -196,7 +184,6 @@ export default function DonatePage() {
                 </div>
                 <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
               </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Quantity *</label>
@@ -212,7 +199,6 @@ export default function DonatePage() {
                   </select>
                 </div>
               </div>
-
               {category === 'FOOD' && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Expiry / Best Before *</label>
@@ -220,7 +206,6 @@ export default function DonatePage() {
                   <p className="text-xs text-gray-400 mt-1">Required for food safety.</p>
                 </div>
               )}
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Your Name *</label>
@@ -236,30 +221,23 @@ export default function DonatePage() {
                   </select>
                 </div>
               </div>
-
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">WhatsApp / Phone *</label>
-                <input name="phone" required placeholder="+91 XXXXX XXXXX" type="tel" className="input-field" />
-                <p className="text-xs text-gray-400 mt-1">Receivers will contact you on this number.</p>
+                <input name="phone" required placeholder="e.g. 9876543210" type="tel" className="input-field" maxLength={13} />
+                <p className="text-xs text-gray-400 mt-1">10-digit Indian mobile number. Receivers will contact you on this.</p>
               </div>
-
-              {/* ── Address Picker ── */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                   Pickup Address *
                   {address && <span className="ml-2 text-green-600 text-xs font-normal">✅ {address}</span>}
                 </label>
                 <AddressPicker value={address} onChange={setAddress} />
-                {!address && (
-                  <p className="text-xs text-red-400 mt-1">Please pick a location on the map or type an address.</p>
-                )}
+                {!address && <p className="text-xs text-red-400 mt-1">Please pick a location on the map or type an address.</p>}
               </div>
-
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">City *</label>
                 <input name="city" required defaultValue="Chennai" placeholder="City" className="input-field" />
               </div>
-
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
@@ -270,12 +248,10 @@ export default function DonatePage() {
                   </span>
                 </label>
               </div>
-
               <button type="submit" disabled={!agreed || loading || !address.trim()}
                 className="btn-primary w-full py-4 text-base disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform">
                 {loading ? 'Posting...' : `${cat.emoji} Post ${cat.label} Donation`}
               </button>
-
             </form>
           </div>
         </div>
