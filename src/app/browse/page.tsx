@@ -1,21 +1,18 @@
 'use client';
 
-import { useState, useMemo, useEffect, lazy, Suspense } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import DonationCard from '@/components/DonationCard';
 import { CATEGORY_META } from '@/lib/data';
 import type { Category, Status } from '@/lib/data';
 import type { DonationRow } from '@/lib/supabase/types';
 
-// Leaflet must NOT be SSR-rendered (it needs window)
 const DonationMap = dynamic(() => import('@/components/DonationMap'), {
   ssr: false,
   loading: () => (
-    <div className="rounded-2xl border border-gray-200 bg-gray-50 flex items-center justify-center" style={{ height: 480 }}>
-      <div className="text-center">
-        <div className="text-4xl mb-3 animate-pulse">\ud83d\uddfa\ufe0f</div>
-        <p className="text-gray-400 text-sm">Loading map...</p>
-      </div>
+    <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-3">
+      <div className="text-5xl animate-pulse">📍</div>
+      <p className="text-gray-400 text-sm font-medium">Loading map...</p>
     </div>
   ),
 });
@@ -24,9 +21,8 @@ export default function BrowsePage() {
   const [donations, setDonations] = useState<DonationRow[]>([]);
   const [loading,   setLoading]   = useState(true);
   const [category,  setCategory]  = useState<Category | 'ALL'>('ALL');
-  const [status,    setStatus]    = useState<Status | 'ALL'>('ALL');
+  const [status,    setStatus]    = useState<Status | 'ALL'>('AVAILABLE');
   const [search,    setSearch]    = useState('');
-  const [view,      setView]      = useState<'list' | 'map'>('list');
 
   useEffect(() => {
     fetch('/api/donations')
@@ -47,105 +43,136 @@ export default function BrowsePage() {
   }), [donations, category, status, search]);
 
   const tabs: { key: Category | 'ALL'; emoji: string; label: string }[] = [
-    { key: 'ALL',     emoji: '\ud83c\udf1f', label: 'All' },
+    { key: 'ALL',     emoji: '🌟', label: 'All' },
     { key: 'FOOD',    emoji: CATEGORY_META.FOOD.emoji,    label: CATEGORY_META.FOOD.label },
     { key: 'CLOTHES', emoji: CATEGORY_META.CLOTHES.emoji, label: CATEGORY_META.CLOTHES.label },
     { key: 'BOOKS',   emoji: CATEGORY_META.BOOKS.emoji,   label: CATEGORY_META.BOOKS.label },
   ];
 
+  const hasActiveFilter = category !== 'ALL' || status !== 'AVAILABLE' || search;
+
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="bg-white border-b border-gray-100">
-        <div className="section-wrapper py-10">
-          <h1 className="text-4xl font-bold text-gray-800">Browse Donations</h1>
-          <p className="text-gray-500 mt-2">Find available food, clothes, and books near you in Chennai</p>
-        </div>
-      </div>
+    // Full viewport height minus the navbar — use min-h-screen, overflow hidden so only inner panels scroll
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 64px)', minHeight: 600 }}>
 
-      <div className="section-wrapper py-8">
-        {/* Category Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          {tabs.map((t) => (
-            <button key={t.key} onClick={() => setCategory(t.key)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium text-sm transition-all ${
-                category === t.key
-                  ? 'bg-green-600 text-white shadow-sm'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-green-300 hover:text-green-700'
-              }`}>
-              {t.emoji} {t.label}
-            </button>
-          ))}
-        </div>
+      {/* ── Top filter bar ── */}
+      <div className="bg-white border-b border-gray-100 shrink-0 px-4 py-3">
+        <div className="max-w-screen-2xl mx-auto flex flex-wrap items-center gap-3">
 
-        {/* Filters + View Toggle */}
-        <div className="flex flex-wrap gap-3 mb-6 items-center">
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">\ud83d\udd0d</span>
-            <input value={search} onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search title, city, type..." className="input-field pl-9" />
+          {/* Category pills */}
+          <div className="flex flex-wrap gap-1.5">
+            {tabs.map((t) => (
+              <button key={t.key} onClick={() => setCategory(t.key)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl font-semibold text-xs transition-all ${
+                  category === t.key
+                    ? 'bg-green-600 text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-600 hover:bg-green-50 hover:text-green-700'
+                }`}>
+                {t.emoji} {t.label}
+              </button>
+            ))}
           </div>
-          <select value={status} onChange={(e) => setStatus(e.target.value as Status | 'ALL')} className="input-field max-w-[180px]">
-            <option value="ALL">All Statuses</option>
-            <option value="AVAILABLE">Available</option>
+
+          {/* Divider */}
+          <div className="h-6 w-px bg-gray-200 hidden sm:block" />
+
+          {/* Search */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search item, area..."
+              className="pl-8 pr-4 py-2 text-sm bg-gray-100 rounded-xl border-0 focus:outline-none focus:ring-2 focus:ring-green-400 w-52"
+            />
+          </div>
+
+          {/* Status filter */}
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as Status | 'ALL')}
+            className="text-sm bg-gray-100 rounded-xl border-0 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 font-medium"
+          >
+            <option value="AVAILABLE">✅ Available only</option>
+            <option value="ALL">All statuses</option>
             <option value="CLAIMED">Claimed</option>
             <option value="COLLECTED">Collected</option>
           </select>
-          {(category !== 'ALL' || status !== 'ALL' || search) && (
-            <button onClick={() => { setCategory('ALL'); setStatus('ALL'); setSearch(''); }} className="btn-secondary text-sm">Clear</button>
+
+          {/* Clear */}
+          {hasActiveFilter && (
+            <button
+              onClick={() => { setCategory('ALL'); setStatus('AVAILABLE'); setSearch(''); }}
+              className="text-xs text-red-500 hover:text-red-700 font-semibold px-3 py-2 rounded-xl hover:bg-red-50 transition-colors"
+            >
+              ✕ Clear
+            </button>
           )}
 
-          {/* View toggle — pushed to the right */}
-          <div className="ml-auto flex items-center bg-gray-100 rounded-xl p-1 gap-1">
-            <button
-              onClick={() => setView('list')}
-              title="List view"
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                view === 'list' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}>
-              \ud83d\udccb List
-            </button>
-            <button
-              onClick={() => setView('map')}
-              title="Map view"
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                view === 'map' ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-              }`}>
-              \ud83d\uddfa\ufe0f Map
-            </button>
+          {/* Result count — pushed right */}
+          <div className="ml-auto flex items-center gap-2">
+            {!loading && (
+              <span className="text-xs text-gray-400 font-medium">
+                <span className="text-gray-700 font-bold">{filtered.length}</span> listing{filtered.length !== 1 ? 's' : ''}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Split pane: Map left | Cards right ── */}
+      <div className="flex flex-1 overflow-hidden max-w-screen-2xl w-full mx-auto">
+
+        {/* LEFT — sticky map pane (hidden on mobile, visible md+) */}
+        <div className="hidden md:flex flex-col" style={{ width: '48%', minWidth: 360 }}>
+          <div className="h-full relative">
+            {loading ? (
+              <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-3">
+                <div className="text-5xl animate-pulse">📍</div>
+                <p className="text-gray-400 text-sm">Loading map...</p>
+              </div>
+            ) : (
+              <DonationMap donations={filtered} fullHeight />
+            )}
           </div>
         </div>
 
-        {/* Results count */}
-        {!loading && filtered.length > 0 && (
-          <p className="text-sm text-gray-400 mb-5">
-            Showing <span className="font-semibold text-gray-700">{filtered.length}</span> donation{filtered.length !== 1 ? 's' : ''}
-            {view === 'map' && <span className="text-gray-400"> &mdash; click any pin to see details</span>}
-          </p>
-        )}
+        {/* Vertical divider */}
+        <div className="hidden md:block w-px bg-gray-200 shrink-0" />
 
-        {/* Loading */}
-        {loading ? (
-          <div className="text-center py-24">
-            <div className="text-5xl mb-4 animate-pulse">\u23f3</div>
-            <p className="text-gray-500">Loading donations...</p>
+        {/* RIGHT — scrollable cards pane */}
+        <div className="flex-1 overflow-y-auto bg-gray-50">
+
+          {/* Mobile-only map banner */}
+          <div className="md:hidden bg-green-50 border-b border-green-100 px-4 py-3 text-xs text-green-700 font-medium flex items-center gap-2">
+            <span>📍</span> Map view available on tablet and desktop
           </div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="text-5xl mb-4">\ud83d\udd0d</p>
-            <p className="text-xl font-semibold text-gray-700">
-              {donations.length === 0 ? 'No donations yet' : 'No donations found'}
-            </p>
-            <p className="text-gray-400 mt-1">
-              {donations.length === 0 ? 'Be the first to post a donation!' : 'Try adjusting your filters'}
-            </p>
+
+          <div className="p-5">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-32">
+                <div className="text-5xl mb-4 animate-pulse">⏳</div>
+                <p className="text-gray-400">Loading donations...</p>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-32">
+                <p className="text-5xl mb-4">🔍</p>
+                <p className="text-xl font-semibold text-gray-700">
+                  {donations.length === 0 ? 'No donations yet' : 'No matches found'}
+                </p>
+                <p className="text-gray-400 mt-1 text-sm">
+                  {donations.length === 0
+                    ? 'Be the first to post something!'
+                    : 'Try a different category or clear your filters'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {filtered.map((d) => <DonationCard key={d.id} donation={d} />)}
+              </div>
+            )}
           </div>
-        ) : view === 'list' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((d) => <DonationCard key={d.id} donation={d} />)}
-          </div>
-        ) : (
-          <DonationMap donations={filtered} />
-        )}
+        </div>
       </div>
     </div>
   );
