@@ -1,8 +1,18 @@
 'use client';
 import { useState, useRef } from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { ITEM_TYPES } from '@/lib/data';
 import type { Category } from '@/lib/data';
+
+const AddressPicker = dynamic(() => import('@/components/AddressPicker'), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl border border-gray-200 bg-gray-50 h-24 flex items-center justify-center">
+      <p className="text-sm text-gray-400 animate-pulse">🗺️ Loading address picker…</p>
+    </div>
+  ),
+});
 
 const CATEGORIES: { value: Category; label: string; emoji: string; hint: string }[] = [
   { value: 'FOOD',    label: 'Food',    emoji: '🍱', hint: 'e.g. Fresh vegetables, cooked meals, packaged goods' },
@@ -19,6 +29,7 @@ export default function DonatePage() {
   const [donorPhone, setDonorPhone] = useState('');
   const [preview,    setPreview]    = useState<string | null>(null);
   const [photoFile,  setPhotoFile]  = useState<File | null>(null);
+  const [address,    setAddress]    = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
   const cat = CATEGORIES.find((c) => c.value === category)!;
 
@@ -32,7 +43,9 @@ export default function DonatePage() {
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault(); setLoading(true); setError('');
+    e.preventDefault();
+    if (!address.trim()) { setError('Please select or enter a pickup address.'); return; }
+    setLoading(true); setError('');
     const form = e.currentTarget;
     const fd   = new FormData(form);
     const phone = fd.get('phone') as string;
@@ -50,7 +63,7 @@ export default function DonatePage() {
           donorName:   fd.get('donorName'),
           donorType:   fd.get('donorType'),
           phone,
-          address:     fd.get('address'),
+          address,
           city:        fd.get('city') || 'Chennai',
         }),
       });
@@ -79,39 +92,27 @@ export default function DonatePage() {
           <h2 className="text-3xl font-bold text-gray-800">Donation Posted!</h2>
           <p className="text-gray-500 mt-2 text-sm">Your listing is now live and visible to everyone nearby.</p>
         </div>
-
-        {/* What happens next */}
         <div className="card mb-4">
           <h3 className="font-bold text-gray-800 mb-4">📱 What happens next?</h3>
           <div className="space-y-4">
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-green-100 text-green-700 font-bold text-sm flex items-center justify-center shrink-0">1</div>
-              <div>
-                <p className="text-sm font-semibold text-gray-700">Someone will call you</p>
-                <p className="text-xs text-gray-500 mt-0.5">Interested receivers will contact you on <strong className="text-green-700">{donorPhone}</strong> to arrange pickup.</p>
+            {[
+              ['1', 'Someone will contact you on WhatsApp', `Receivers will message you on ${donorPhone} to arrange pickup.`],
+              ['2', 'Update your donation status', 'Go to My Donations and enter your phone number to find your listing.'],
+              ['3', 'Mark as Collected', 'After handing over the item, mark it Collected so the listing closes.'],
+            ].map(([num, title, desc]) => (
+              <div key={num} className="flex gap-3">
+                <div className="w-7 h-7 rounded-full bg-green-100 text-green-700 font-bold text-sm flex items-center justify-center shrink-0">{num}</div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-700">{title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-green-100 text-green-700 font-bold text-sm flex items-center justify-center shrink-0">2</div>
-              <div>
-                <p className="text-sm font-semibold text-gray-700">Update your donation status</p>
-                <p className="text-xs text-gray-500 mt-0.5">Go to <strong>Browse Donations</strong> and search by your phone number to find and update your listing.</p>
-              </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="w-7 h-7 rounded-full bg-green-100 text-green-700 font-bold text-sm flex items-center justify-center shrink-0">3</div>
-              <div>
-                <p className="text-sm font-semibold text-gray-700">Mark as Collected</p>
-                <p className="text-xs text-gray-500 mt-0.5">After handing over the item, mark it as <strong>Collected</strong> so the listing closes.</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
-
         <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-xs text-amber-800 mb-5">
           ⚠️ Arrange pickup in a safe, visible public spot. Never share your home address.
         </div>
-
         <div className="flex flex-col sm:flex-row gap-3">
           <Link href="/browse" className="btn-primary flex-1 text-center py-3">🔍 Browse Donations</Link>
           <Link href="/donate" className="btn-secondary flex-1 text-center py-3">➕ Post Another</Link>
@@ -239,12 +240,19 @@ export default function DonatePage() {
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">WhatsApp / Phone *</label>
                 <input name="phone" required placeholder="+91 XXXXX XXXXX" type="tel" className="input-field" />
-                <p className="text-xs text-gray-400 mt-1">Receivers will contact you on this number to arrange pickup.</p>
+                <p className="text-xs text-gray-400 mt-1">Receivers will contact you on this number.</p>
               </div>
 
+              {/* ── Address Picker ── */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Pickup Address *</label>
-                <input name="address" required placeholder="Street / Area" className="input-field" />
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Pickup Address *
+                  {address && <span className="ml-2 text-green-600 text-xs font-normal">✅ {address}</span>}
+                </label>
+                <AddressPicker value={address} onChange={setAddress} />
+                {!address && (
+                  <p className="text-xs text-red-400 mt-1">Please pick a location on the map or type an address.</p>
+                )}
               </div>
 
               <div>
@@ -263,7 +271,7 @@ export default function DonatePage() {
                 </label>
               </div>
 
-              <button type="submit" disabled={!agreed || loading}
+              <button type="submit" disabled={!agreed || loading || !address.trim()}
                 className="btn-primary w-full py-4 text-base disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition-transform">
                 {loading ? 'Posting...' : `${cat.emoji} Post ${cat.label} Donation`}
               </button>
