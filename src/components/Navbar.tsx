@@ -1,80 +1,88 @@
 'use client';
-import Link from 'next/link';
 import { useState } from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV_LINKS = [
-  { href: '/browse',       label: 'Browse' },
-  { href: '/donate',       label: 'Donate' },
-  { href: '/my-donations', label: 'My Donations' },
-  { href: '/ngos',         label: 'NGO Directory' },
-  { href: '/disclaimer',   label: 'Disclaimer' },
+  { href: '/',             label: 'Home' },
+  { href: '/rates',        label: 'Scrap Rates' },
+  { href: '/how-it-works', label: 'How It Works' },
+  { href: '/contact',      label: 'Contact' },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
-  const pathname        = usePathname();
+  const path = usePathname();
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-      <div className="section-wrapper flex items-center justify-between h-14 md:h-16">
+    <header className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
+      <div className="section-wrapper h-16 flex items-center justify-between gap-4">
 
-        {/* Logo + tagline */}
-        <Link href="/" className="flex items-center gap-2 group" onClick={() => setOpen(false)}>
-          <span className="text-2xl">🌱</span>
-          <div className="leading-none">
-            <span className="font-extrabold text-lg md:text-xl text-gray-900 tracking-tight block">DontWaste</span>
-            <span className="text-[10px] text-green-600 font-medium tracking-wide hidden sm:block">Don’t let good go to waste</span>
-          </div>
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <span className="text-2xl">♻️</span>
+          <span className="font-extrabold text-gray-900 text-lg tracking-tight">DontWaste</span>
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1">
           {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                pathname === l.href
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                path === l.href
                   ? 'bg-green-50 text-green-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
               }`}>
               {l.label}
             </Link>
           ))}
-          <Link href="/donate" className="ml-2 btn-primary py-2 px-4">+ Post Donation</Link>
+        </nav>
+
+        {/* CTA */}
+        <div className="hidden md:flex items-center gap-3">
+          <a href="https://wa.me/919999999999?text=Hi%2C%20I%20want%20to%20schedule%20a%20scrap%20pickup"
+            target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-[#25D366] hover:bg-[#20b958] text-white transition-colors shadow-sm">
+            📲 WhatsApp Us
+          </a>
+          <Link href="/schedule" className="btn-primary">
+            Schedule Pickup
+          </Link>
         </div>
 
-        {/* Mobile: CTA + hamburger */}
-        <div className="flex items-center gap-2 md:hidden">
-          <Link href="/donate"
-            className="btn-primary py-2 px-3 text-xs"
-            onClick={() => setOpen(false)}>
-            + Donate
-          </Link>
-          <button onClick={() => setOpen((p) => !p)}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 active:bg-gray-200"
-            aria-label="Menu">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {open
-                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
-            </svg>
-          </button>
-        </div>
+        {/* Mobile hamburger */}
+        <button onClick={() => setOpen(!open)} className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
+          {open ? (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+          )}
+        </button>
       </div>
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4 pt-2 flex flex-col gap-1">
+        <div className="md:hidden bg-white border-t border-gray-100 px-4 pb-4 flex flex-col gap-1">
           {NAV_LINKS.map((l) => (
             <Link key={l.href} href={l.href} onClick={() => setOpen(false)}
-              className={`px-3 py-3 rounded-xl text-sm font-medium active:bg-gray-100 ${
-                pathname === l.href ? 'bg-green-50 text-green-700' : 'text-gray-700'
+              className={`px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
+                path === l.href ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'
               }`}>
               {l.label}
             </Link>
           ))}
+          <div className="flex flex-col gap-2 mt-2">
+            <a href="https://wa.me/919999999999?text=Hi%2C%20I%20want%20to%20schedule%20a%20scrap%20pickup"
+              target="_blank" rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold bg-[#25D366] text-white">
+              📲 WhatsApp Us
+            </a>
+            <Link href="/schedule" onClick={() => setOpen(false)} className="btn-primary w-full justify-center py-3">
+              Schedule Pickup
+            </Link>
+          </div>
         </div>
       )}
-    </nav>
+    </header>
   );
 }

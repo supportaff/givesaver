@@ -4,9 +4,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
-  title: 'DontWaste — Donate Food, Clothes & Books',
-  description: 'Don\'t let good go to waste. Connect with NGOs and people in need across India — donate food, clothes, books and more for free.',
-  keywords: 'food donation, clothes donation, book donation, NGO, volunteers, India, dontwaste',
+  title: 'DontWaste — Doorstep Scrap Collection in Chennai',
+  description: 'Schedule a free doorstep scrap pickup and get paid fair market rates for paper, plastic, metal, e-waste and appliances. Serving Chennai.',
+  keywords: 'scrap collection Chennai, kabadiwala Chennai, doorstep scrap pickup, sell scrap online Chennai, paper scrap rate Chennai',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
