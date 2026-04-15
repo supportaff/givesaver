@@ -21,9 +21,6 @@ create policy "Public can read active scrap rates"
   on public.scrap_rates for select
   using (active = true);
 
--- Admin can do everything (service-role key bypasses RLS)
--- No extra policy needed — admin API uses service role key
-
 -- Index for fast city+active lookups
 create index if not exists idx_scrap_rates_city_active on public.scrap_rates(city, active);
 
@@ -52,18 +49,23 @@ insert into public.scrap_rates (name, category, unit, price, city) values
 -- pickup_requests: submitted by website users
 -- ───────────────────────────────────────────────────────────────
 create table if not exists public.pickup_requests (
-  id          uuid primary key default gen_random_uuid(),
-  name        text not null,
-  phone       text not null,
-  address     text not null,
-  category    text not null,
-  time_slot   text not null,
-  date        date not null,
-  notes       text,
-  city        text not null default 'Chennai',
-  status      text not null default 'PENDING',   -- PENDING | CONFIRMED | COMPLETED | CANCELLED
-  created_at  timestamptz not null default now(),
-  updated_at  timestamptz not null default now()
+  id            uuid primary key default gen_random_uuid(),
+  name          text not null,
+  phone         text not null,
+  address       text not null,
+  category      text not null,
+  time_slot     text not null,
+  date          date not null,
+  notes         text,
+  city          text not null default 'Chennai',
+  -- status: PENDING | ASSIGNED | COMPLETED | CANCELLED
+  status        text not null default 'PENDING'
+                  check (status in ('PENDING','ASSIGNED','COMPLETED','CANCELLED')),
+  -- partner assigned to this pickup
+  partner_name  text,
+  partner_phone text,
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz not null default now()
 );
 
 alter table public.pickup_requests enable row level security;
@@ -73,6 +75,45 @@ create policy "Anyone can submit pickup request"
   on public.pickup_requests for insert
   with check (true);
 
--- Admin reads via service role — no extra policy needed
+-- Admin reads/updates via service role — no extra policy needed
 
-create index if not exists idx_pickup_requests_status on public.pickup_requests(status, created_at desc);
+create index if not exists idx_pickup_requests_status
+  on public.pickup_requests(status, created_at desc);
+
+create index if not exists idx_pickup_requests_city
+  on public.pickup_requests(city, created_at desc);
+
+-- ───────────────────────────────────────────────────────────────
+-- Auto-update updated_at on row change
+-- ───────────────────────────────────────────────────────────────
+create or replace function public.set_updated_at()
+returns trigger language plpgsql as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+create trigger trg_pickup_requests_updated_at
+  before update on public.pickup_requests
+  for each row execute function public.set_updated_at();
+
+create trigger trg_scrap_rates_updated_at
+  before update on public.scrap_rates
+  for each row execute function public.set_updated_at();
+
+-- ───────────────────────────────────────────────────────────────
+-- Migration patch: add partner columns if table already exists
+-- (safe to run multiple times)
+-- ───────────────────────────────────────────────────────────────
+do $$ begin
+  if not exists (
+    select 1 from information_schema.columns
+    where table_schema='public'
+      and table_name='pickup_requests'
+      and column_name='partner_name'
+  ) then
+    alter table public.pickup_requests add column partner_name text;
+    alter table public.pickup_requests add column partner_phone text;
+  end if;
+end $$;
